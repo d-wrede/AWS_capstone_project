@@ -1,14 +1,12 @@
-
-resource "aws_s3_bucket" "portfolio_bucket" {
-  bucket = "portfolio_bucket_DanielWrede"
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 4.0"
+    }
+  }
 }
 
-resource "aws_acm_certificate" "portfolio_cert" {
-  domain_name       = "example.com"
-  validation_method = "DNS"
+provider "aws" {
+  region = var.region
 }
-
-# resource "aws_cloudfront_distribution" "portfolio_distribution" {
-#   # ... (configuration for CloudFront distribution)
-# }
-
