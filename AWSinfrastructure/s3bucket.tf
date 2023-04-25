@@ -44,7 +44,7 @@ resource "null_resource" "upload_content" {
   }
 
   provisioner "local-exec" {
-    command = "aws s3 cp /Users/danielwrede/Documents/AWS_CloudDev/capstone_project/homepage_content/mark/ s3://${aws_s3_bucket.website_bucket.id}/ --recursive --acl public-read"
+    command = "aws s3 cp /Users/danielwrede/Documents/AWS_CloudDev/capstone_project/homepage_content/ s3://${aws_s3_bucket.website_bucket.id}/ --recursive --acl public-read"
   }
 }
 
