@@ -1,6 +1,6 @@
 variable "region" {
   description = "The AWS region to use"
-  default     = "us-west-2"
+  default     = "eu-central-1"
 }
 
 ####################
@@ -10,7 +10,7 @@ variable "region" {
 variable "bucket_name" {
   type        = string
   description = "The name of the S3 bucket"
-  default     = "portfolio-bucket-danielwrede456"
+  default     = "portfolio-page-bucket-danielwrede"
 }
 
 
