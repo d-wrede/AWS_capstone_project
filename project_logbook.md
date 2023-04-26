@@ -29,9 +29,38 @@ With these steps, the website has been successfully deployed to an S3 bucket, an
 
 ## 26. of April
 
-Found this guide for s3bucket static website setup: <https://www.alexhyett.com/terraform-s3-static-website-hosting/>
+- Discovered a guide for setting up an S3 bucket static website: https://www.alexhyett.com/terraform-s3-static-website-hosting/
+- Noted that the guide is outdated and requires several additional resources: aws_s3_bucket_website_configuration, aws_s3_bucket_policy, aws_s3_bucket_ownership_controls, aws_s3_bucket_public_access_block, and aws_s3_bucket_acl
+- Identified the "url_redirects" module from "operatehappy" as a potential solution for implementing redirection using just a single bucket, thereby eliminating the need for a second bucket.
+- Explored other potentially relevant Terraform modules, such as the "static_website" and "s3_static_website" modules. However, due to unclear documentation, decided to return to the original guide for guidance.
 
-- The above guide is deprecated and many options need an extra resource: aws_s3_bucket_website_configuration, aws_s3_bucket_policy, aws_s3_bucket_ownership_controls, aws_s3_bucket_public_access_block and aws_s3_bucket_acl
-- Found module "url_redirects" from "operatehappy" that enables redirection using a single bucket and thereby making the second bucket obsolete.
-- there are several modules that may be applicable, like the "static_website" module or the "s3_static_website" module. But documentation is not clear, so I am returning to original guide.
-- 
+
+- CloudFront Setup:
+    Configured a CloudFront distribution using Terraform to serve the static website from the S3 bucket.
+    Set up the CloudFront distribution to use the custom domain name.
+    Enabled HTTPS by using AWS Certificate Manager (ACM) to create an SSL certificate for the custom domain.
+    Configured CloudFront to redirect HTTP requests to HTTPS.
+    Set custom error responses in the CloudFront distribution to handle 404 errors.
+
+- Route 53 Configuration:
+
+    Modified the Terraform code to use the existing Route 53 hosted zone for the custom domain.
+    Created Route 53 records to point the custom domain and its "www" subdomain to the CloudFront distribution.
+
+- SSL Certificate:
+
+    Requested an SSL certificate using AWS Certificate Manager (ACM) with Terraform.
+    Used the "EMAIL" validation method to validate the domain ownership.
+    Configured the CloudFront distribution to use the SSL certificate for serving content over HTTPS.
+    Waited for the validation email to arrive and confirmed the domain ownership.
+
+- GitHub Actions Workflow Update:
+
+    Updated the GitHub Actions workflow to include AWS CLI v2.
+    Added a step to create an invalidation in CloudFront to clear the cache whenever the website files are updated.
+
+- Testing and Verification:
+
+    Checked the website using the custom domain to ensure it's working correctly and served over HTTPS.
+    Verified that the CloudFront distribution is serving the content and handling custom error responses.
+    Tested the GitHub Actions workflow to ensure the CloudFront cache is invalidated upon deployment.
