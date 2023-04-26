@@ -26,3 +26,12 @@
     Used Google Chrome's Developer Tools to verify that the font requests were being made to the local files hosted on the S3 bucket.
 
 With these steps, the website has been successfully deployed to an S3 bucket, and Google Fonts have been self-hosted to improve performance and privacy for visitors.
+
+## 26. of April
+
+Found this guide for s3bucket static website setup: <https://www.alexhyett.com/terraform-s3-static-website-hosting/>
+
+- The above guide is deprecated and many options need an extra resource: aws_s3_bucket_website_configuration, aws_s3_bucket_policy, aws_s3_bucket_ownership_controls, aws_s3_bucket_public_access_block and aws_s3_bucket_acl
+- Found module "url_redirects" from "operatehappy" that enables redirection using a single bucket and thereby making the second bucket obsolete.
+- there are several modules that may be applicable, like the "static_website" module or the "s3_static_website" module. But documentation is not clear, so I am returning to original guide.
+- 

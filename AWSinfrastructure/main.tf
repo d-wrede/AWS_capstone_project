@@ -20,6 +20,11 @@ provider "aws" {
 #   skip_credentials_validation  = true
 #   skip_requesting_account_id   = true
 }
+
+provider "aws" {
+  alias  = "acm_provider"
+  region = "us-east-1"
+}
 # resource "aws_acm_certificate" "portfolio_cert" {
 #   domain_name       = "example.com"
 #   validation_method = "DNS"

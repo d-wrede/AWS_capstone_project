@@ -1,7 +1,12 @@
 output "website_url" {
   description = "The URL of the S3 website"
-  value       = "http://${aws_s3_bucket.website_bucket.bucket}.s3-website-${var.region}.amazonaws.com"
+  value       = "http://${aws_s3_bucket.www_bucket.bucket}.s3-website-${var.region}.amazonaws.com"
 }
+
+output "cloudfront_distribution_id" {
+  value = aws_cloudfront_distribution.www_s3_distribution.id
+}
+
 
 # AWS CLI commands
 # aws s3 website s3://portfolio-page-bucket-danielwrede/ --index-document index.html
