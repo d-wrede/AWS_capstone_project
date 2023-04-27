@@ -1,6 +1,7 @@
 # S3 bucket for redirecting non-www to www.
 resource "aws_s3_bucket" "redirect_bucket" {
   bucket = var.bucket_name
+  force_destroy = true
   tags = var.common_tags
 }
 

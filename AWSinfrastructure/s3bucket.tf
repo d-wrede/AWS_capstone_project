@@ -3,7 +3,6 @@ resource "aws_s3_bucket" "www_bucket" {
   bucket = "www.${var.bucket_name}"
   force_destroy = true
   tags = var.common_tags
-  
 }
 
 resource "aws_s3_bucket_website_configuration" "www_bucket" {

@@ -45,3 +45,10 @@ variable "hosted_zone_id" {
   description = "value of the hosted zone id"
   default = "Z07599602ZKBWE6AUM2P8"
 }
+
+variable "ssl_certificate_arn" {
+  description = "The ARN of the SSL certificate for the CloudFront distribution."
+  type        = string
+  default = "arn:aws:acm:us-east-1:792277894863:certificate/fa6f889c-1f92-41a8-a849-50587fec57e9"
+}
+

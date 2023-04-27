@@ -26,8 +26,8 @@ resource "aws_cloudfront_distribution" "www_s3_distribution" {
 #   }
 
   default_cache_behavior {
-    allowed_methods  = ["GET", "HEAD"]
-    cached_methods   = ["GET", "HEAD"]
+    allowed_methods  = ["GET", "HEAD", "POST"]
+    cached_methods   = ["GET", "HEAD", "POST"]
     target_origin_id = "S3-www.${var.bucket_name}"
 
     forwarded_values {
@@ -52,7 +52,7 @@ resource "aws_cloudfront_distribution" "www_s3_distribution" {
   }
 
   viewer_certificate {
-    acm_certificate_arn      = aws_acm_certificate_validation.cert_validation.certificate_arn
+    acm_certificate_arn      = var.ssl_certificate_arn
     ssl_support_method       = "sni-only"
     minimum_protocol_version = "TLSv1.1_2016"
   }
@@ -64,7 +64,7 @@ resource "aws_cloudfront_distribution" "www_s3_distribution" {
 resource "aws_cloudfront_distribution" "redirect_s3_distribution" {
   origin {
     domain_name = aws_s3_bucket.redirect_bucket.bucket_regional_domain_name
-    origin_id   = "S3-.${var.bucket_name}"
+    origin_id   = "S3-${var.bucket_name}"
     custom_origin_config {
       http_port              = 80
       https_port             = 443
@@ -75,13 +75,13 @@ resource "aws_cloudfront_distribution" "redirect_s3_distribution" {
 
   enabled         = true
   is_ipv6_enabled = true
-
+  comment             = "S3 Bucket Redirect Distribution"
   aliases = [var.domain_name]
 
   default_cache_behavior {
-    allowed_methods  = ["GET", "HEAD"]
-    cached_methods   = ["GET", "HEAD"]
-    target_origin_id = "S3-.${var.bucket_name}"
+    allowed_methods  = ["GET", "HEAD", "POST"]
+    cached_methods   = ["GET", "HEAD", "POST"]
+    target_origin_id = "S3-${var.bucket_name}"
 
     forwarded_values {
       query_string = true
@@ -106,7 +106,7 @@ resource "aws_cloudfront_distribution" "redirect_s3_distribution" {
   }
 
   viewer_certificate {
-    acm_certificate_arn      = aws_acm_certificate_validation.cert_validation.certificate_arn
+    acm_certificate_arn      = var.ssl_certificate_arn
     ssl_support_method       = "sni-only"
     minimum_protocol_version = "TLSv1.1_2016"
   }
