@@ -2,6 +2,7 @@
 resource "aws_cloudfront_distribution" "www_s3_distribution" {
   origin {
     domain_name = aws_s3_bucket.www_bucket.bucket_regional_domain_name
+    #bucket_regional_domain_name
     origin_id   = "S3-www.${var.bucket_name}"
 
     custom_origin_config {
@@ -26,8 +27,8 @@ resource "aws_cloudfront_distribution" "www_s3_distribution" {
 #   }
 
   default_cache_behavior {
-    allowed_methods  = ["GET", "HEAD", "POST"]
-    cached_methods   = ["GET", "HEAD", "POST"]
+    allowed_methods  = ["GET", "HEAD"]
+    cached_methods   = ["GET", "HEAD"]
     target_origin_id = "S3-www.${var.bucket_name}"
 
     forwarded_values {
@@ -64,6 +65,7 @@ resource "aws_cloudfront_distribution" "www_s3_distribution" {
 resource "aws_cloudfront_distribution" "redirect_s3_distribution" {
   origin {
     domain_name = aws_s3_bucket.redirect_bucket.bucket_regional_domain_name
+    #aws_s3_bucket.redirect_bucket.bucket_regional_domain_name
     origin_id   = "S3-${var.bucket_name}"
     custom_origin_config {
       http_port              = 80
@@ -79,8 +81,8 @@ resource "aws_cloudfront_distribution" "redirect_s3_distribution" {
   aliases = [var.domain_name]
 
   default_cache_behavior {
-    allowed_methods  = ["GET", "HEAD", "POST"]
-    cached_methods   = ["GET", "HEAD", "POST"]
+    allowed_methods  = ["GET", "HEAD"]
+    cached_methods   = ["GET", "HEAD"]
     target_origin_id = "S3-${var.bucket_name}"
 
     forwarded_values {
@@ -109,6 +111,13 @@ resource "aws_cloudfront_distribution" "redirect_s3_distribution" {
     acm_certificate_arn      = var.ssl_certificate_arn
     ssl_support_method       = "sni-only"
     minimum_protocol_version = "TLSv1.1_2016"
+  }
+
+  # Logging configuration
+  logging_config {
+    include_cookies = false
+    bucket          = "${aws_s3_bucket.log_bucket.bucket_domain_name}"
+    prefix          = "cloudfront/"
   }
 
   tags = var.common_tags

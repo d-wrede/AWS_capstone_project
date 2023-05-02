@@ -42,4 +42,7 @@ resource "aws_s3_bucket_public_access_block" "redirect_bucket" {
 resource "aws_s3_bucket_policy" "give_read_access_to_redirect_bucket" {
   bucket = aws_s3_bucket.redirect_bucket.id
   policy = templatefile("templates/s3-policy.json", { bucket = var.bucket_name })
+  depends_on = [
+    aws_s3_bucket.redirect_bucket
+  ]
 }

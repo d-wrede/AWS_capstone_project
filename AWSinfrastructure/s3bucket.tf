@@ -16,6 +16,9 @@ resource "aws_s3_bucket_website_configuration" "www_bucket" {
 resource "aws_s3_bucket_policy" "give_read_access_to_www_bucket" {
   bucket = aws_s3_bucket.www_bucket.id
   policy = templatefile("templates/s3-policy.json", { bucket = "www.${var.bucket_name}" })
+  depends_on = [
+    aws_s3_bucket.www_bucket
+  ]
 }
 
 resource "aws_s3_bucket_ownership_controls" "www_bucket" {
@@ -77,6 +80,42 @@ resource "aws_s3_bucket_cors_configuration" "example" {
     allowed_origins = ["*"]
   }
 }
+
+######################
+# s3 bucket for logs #
+######################
+resource "aws_s3_bucket" "log_bucket" {
+  bucket = var.log_bucket_name
+  tags = var.common_tags
+}
+
+resource "aws_s3_bucket_ownership_controls" "log_bucket" {
+  bucket = aws_s3_bucket.log_bucket.id
+  rule {
+    object_ownership = "BucketOwnerPreferred"
+  }
+}
+
+resource "aws_s3_bucket_public_access_block" "log_bucket" {
+  bucket = aws_s3_bucket.log_bucket.id
+
+  block_public_acls       = false
+  block_public_policy     = false
+  ignore_public_acls      = false
+  restrict_public_buckets = false
+}
+
+# enable public access for cloud distribution logs
+resource "aws_s3_bucket_acl" "log_bucket" {
+  depends_on = [
+    aws_s3_bucket_ownership_controls.log_bucket,
+    aws_s3_bucket_public_access_block.log_bucket,
+  ]
+
+  bucket = aws_s3_bucket.log_bucket.id
+  acl    = "public-read"
+}
+
 
 # module "url_redirects" {
 #   source  = "operatehappy/s3-object-url-redirects/aws"

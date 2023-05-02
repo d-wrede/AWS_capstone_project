@@ -18,6 +18,14 @@ variable "bucket_name" {
   default     = "daniel-wrede.de"
 }
 
+variable "log_bucket_name" {
+  type        = string
+  description = "The name of the S3 bucket for logs."
+  default     = "logbucket-daniel-wrede.de"
+}
+
+
+
 variable "common_tags" {
   description = "Common tags you want applied to all components."
   default = {
