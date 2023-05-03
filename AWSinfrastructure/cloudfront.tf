@@ -4,13 +4,22 @@ resource "aws_cloudfront_distribution" "www_s3_distribution" {
     # for s3 website hosting it is important to use the website_endpoint of
     # the website_configuration instead of the bucket itself.
     domain_name = aws_s3_bucket_website_configuration.www_bucket.website_endpoint
+    # aws_s3_bucket.www_bucket.bucket_regional_domain_name
+    # aws_s3_bucket_website_configuration.www_bucket.website_endpoint
     origin_id   = "S3-www.${var.bucket_name}"
 
-    custom_origin_config {
-      http_port              = 80
-      https_port             = 443
-      origin_protocol_policy = "http-only"
-      origin_ssl_protocols   = ["TLSv1", "TLSv1.1", "TLSv1.2"]
+    # The custom_origin_config block is not required, when using the s3_origin_config
+    # with the origin_access_identity to allow access to the s3 bucket.
+    # custom_origin_config {
+    #   http_port              = 80
+    #   https_port             = 443
+    #   origin_protocol_policy = "http-only"
+    #   origin_ssl_protocols   = ["TLSv1", "TLSv1.1", "TLSv1.2"]
+    # }
+    
+    used for s3 bucket access via origin_access_identity (then comment custom_origin_config block)
+    s3_origin_config {
+      origin_access_identity = aws_cloudfront_origin_access_identity.example.cloudfront_access_identity_path
     }
   }
 
@@ -34,6 +43,7 @@ resource "aws_cloudfront_distribution" "www_s3_distribution" {
 
     forwarded_values {
       query_string = false
+      headers = ["Origin", "X-CloudFront-Access"]
 
       cookies {
         forward = "none"
@@ -57,6 +67,13 @@ resource "aws_cloudfront_distribution" "www_s3_distribution" {
     acm_certificate_arn      = var.ssl_certificate_arn
     ssl_support_method       = "sni-only"
     minimum_protocol_version = "TLSv1.1_2016"
+  }
+
+  # Logging configuration
+  logging_config {
+    bucket          = "${aws_s3_bucket.log_bucket.bucket_domain_name}"
+    prefix          = "cloudfront_www_logs/"
+    include_cookies = false
   }
 
   tags = var.common_tags
@@ -120,8 +137,7 @@ resource "aws_cloudfront_distribution" "redirect_s3_distribution" {
   # Logging configuration
   logging_config {
     bucket          = "${aws_s3_bucket.log_bucket.bucket_domain_name}"
-    prefix          = "cloudfront_logs/"
-    #role_arn        = aws_iam_role.cloudfront_logs.arn
+    prefix          = "cloudfront_redirect_logs/"
     include_cookies = false
   }
 

@@ -13,9 +13,49 @@ resource "aws_s3_bucket_website_configuration" "www_bucket" {
   }
 }
 
+resource "aws_cloudfront_origin_access_identity" "example" {
+  comment = "OAI for accessing S3 bucket content"
+}
+
 resource "aws_s3_bucket_policy" "give_read_access_to_www_bucket" {
   bucket = aws_s3_bucket.www_bucket.id
-  policy = templatefile("templates/s3-policy.json", { bucket = "www.${var.bucket_name}" })
+  # use the following policy, to enable access via custom header
+  # and in the cloudfront distribution as domain name:
+  # aws_s3_bucket_website_configuration.www_bucket.website_endpoint
+  # policy = jsonencode({
+  #   Version = "2012-10-17"
+  #   Statement = [
+  #     {
+  #       Action   = "s3:GetObject"
+  #       Effect   = "Allow"
+  #       Resource = "${aws_s3_bucket.www_bucket.arn}/*"
+  #       Principal = "*"
+  #       Condition = {
+  #         StringEquals = {
+  #           "aws:Referer" = "X-CloudFront-Access"
+  #         }
+  #       }
+  #     }
+  #   ]
+  # })
+  # use this policy, to enable access via origin_access_identity
+  # but using the bucket_regional_domain_name in the cloudfront distribution
+  # aws_s3_bucket.www_bucket.bucket_regional_domain_name
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action   = "s3:GetObject"
+        Effect   = "Allow"
+        Resource = "${aws_s3_bucket.www_bucket.arn}/*"
+        Principal = {
+          AWS = aws_cloudfront_origin_access_identity.example.iam_arn
+        }
+      }
+    ]
+  })
+
+  #policy = templatefile("templates/s3-policy.json", { bucket = "www.${var.bucket_name}" })
   # avoid "Error putting S3 policy: AccessDenied: Access Denied"
   depends_on = [
     aws_s3_bucket.redirect_bucket,
@@ -42,15 +82,27 @@ resource "aws_s3_bucket_public_access_block" "www_bucket" {
   restrict_public_buckets = false
 }
 
-resource "aws_s3_bucket_acl" "www_bucket" {
-  depends_on = [
-    aws_s3_bucket_ownership_controls.www_bucket,
-    aws_s3_bucket_public_access_block.www_bucket,
-  ]
+# resource "aws_s3_bucket_acl" "www_bucket" {
+#   bucket = aws_s3_bucket.www_bucket.id
+#   access_control_policy {
+#     grant {
+#       grantee {
+#         type = "Group"
+#         uri  = "http://acs.amazonaws.com/groups/s3/LogDelivery"
+#       }
+#       permission = "FULL_CONTROL"
+#     }
 
-  bucket = aws_s3_bucket.www_bucket.id
-  acl    = "public-read"
-}
+#     owner {
+#       id = data.aws_canonical_user_id.current.id
+#     }
+#   }
+
+#   depends_on = [
+#     aws_s3_bucket_ownership_controls.www_bucket,
+#     aws_s3_bucket_public_access_block.www_bucket,
+#   ]
+# }
 
 resource "null_resource" "upload_content" {
   triggers = {
@@ -92,8 +144,8 @@ resource "aws_s3_bucket_cors_configuration" "example" {
 resource "aws_s3_bucket" "log_bucket" {
   bucket = var.log_bucket_name
   tags = var.common_tags
+  force_destroy = true
 }
-data "aws_canonical_user_id" "current" {}
 
 resource "aws_s3_bucket_ownership_controls" "log_bucket" {
   bucket = aws_s3_bucket.log_bucket.id
@@ -112,7 +164,7 @@ resource "aws_s3_bucket_acl" "log_bucket_acl" {
         id   = data.aws_canonical_user_id.current.id
         type = "CanonicalUser"
       }
-      permission = "READ"
+      permission = "FULL_CONTROL"
     }
 
     grant {

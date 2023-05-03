@@ -3,6 +3,8 @@ variable "region" {
   default     = "eu-central-1"
 }
 
+data "aws_canonical_user_id" "current" {}
+
 ####################
 # S3 variables
 ####################

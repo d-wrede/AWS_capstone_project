@@ -304,6 +304,60 @@ I have done this for both cloudfront distributions, since it seems to be the cor
   - <https://discuss.hashicorp.com/t/aws-cloudfront-origin-originname-bug/37997/4>
   - <https://www.reddit.com/r/Terraform/comments/114uem0/comment/j92kx8q/>
 
-    Here I found the (implicit) solution to use the website endpoint given by the aws s3 bucket website configuration for the buckets, instead of using the bucket's own endpoints. And it works like a charme! **WOOT!**
+    Here I found the (implicit) solution to use the website endpoint given by the aws s3 bucket website configuration for the buckets, instead of using the bucket's own endpoints. And it works like a charme! **WHOOT!**
 
 - Found an interesting repo for static website hosting using s3 bucket: <https://github.com/subaquatic-pierre/pwa-ci-cd>
+- according to this AWS Guide on ["Getting started with a secure static website"](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/getting-started-secure-static-website-cloudformation-template.html), it is recommended using origin access identity for cloudfront accessing the s3 bucket, instead of setting it to "public read". But it seems to be slightly outdated, since there is something called Origin Access Control with more features, like enabling PUT and DELETE, as well as SSE-KMS. On another page it is recommended to use OAC. But here it is also stated that using either OAI or OAC for a cloudfront distribution that has a website endpoint as origin, is not possible:
+
+    "Note
+    If your origin is an Amazon S3 bucket configured as a website endpoint, you must set it up with CloudFront as a custom origin. That means you can't use OAC (or OAI). However, you can restrict access to a custom origin by setting up custom headers and configuring the origin to require them. For more information, see Restricting access to files on custom origins."
+
+    This sounds contradicting to me, according to the clear recommendations using the website endpoint as origin, as we have covered earlier. I find such contradicting statements in [another AWS statement](https://repost.aws/knowledge-center/cloudfront-serve-static-website) and [on edureka](https://www.edureka.co/community/167779/how-can-i-restrict-access-to-an-s3-website-to-cloudfront?show=168219#a168219) as well.
+    
+    I see two options:
+  1. Use the S3 bucket's website endpoint as the origin, recommended for taking advantage of S3 static website hosting features, such as index documents, error documents, and redirects. Then restrict access using a combination of bucket policies, ACLs, and custom headers.
+  2. Use the S3 bucket (not the website endpoint) as the origin and restrict access using an Origin Access Identity (OAI). This option doesn't provide S3 static website hosting features but simplifies access control and security.
+    
+    Option 1 is chosen, to be able using the s3 bucket website features.
+
+    This is an iterative process :-). Since so many sources recommend using a OAI for connecting the cloudfront distribution with the s3 bucket, also on many sites using the website endpoint, I gave it a try. This leads to the error message:
+
+    ```
+    Error: creating CloudFront Distribution: InvalidArgument: The parameter Origin DomainName does not refer to a valid S3 bucket.
+    │       status code: 400, request id: caf3e0a6-61bf-4f95-b8cc-6eeff52af1f8
+    │
+    │   with aws_cloudfront_distribution.www_s3_distribution,
+    │   on cloudfront.tf line 2, in resource "aws_cloudfront_distribution" "www_s3_distribution":
+    │    2: resource "aws_cloudfront_distribution" "www_s3_distribution" {
+    ´´´
+
+    Hence I changed the domain name to the 'aws_s3_bucket.www_bucket.bucket_regional_domain_name', which is possible for the www_bucket, since we don't use redirection here.
+
+Furthermore I gave it a try using custom headers. Here a header is specified in the bucket policy, so only messages containing that header are accepted:
+
+```terraform
+resource "aws_s3_bucket_policy" "give_read_access_to_www_bucket" {
+bucket = aws_s3_bucket.www_bucket.id
+policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+    {
+        Action   = "s3:GetObject"
+        Effect   = "Allow"
+        Resource = "${aws_s3_bucket.www_bucket.arn}/*"
+        Principal = "*"
+        Condition = {
+        StringEquals = {
+            "aws:Referer" = "X-CloudFront-Access"
+        }
+        }
+    }
+    ]
+})
+```
+
+This works fine, using the 'aws_s3_bucket_website_configuration.www_bucket.website_endpoint' as domain name (and specifying the header in the cf distribution forwarded message). But this option is not secure, since anybody, who looks at the terraform code, will know the header and access the s3 bucket. I guess, since it only stores the website files, this is not crucial, but I wouldn't consider it being good practice. But regarding the many examples and hints towards OAI [like here](https://www.milanvit.net/post/terraform-recipes-cloudfront-distribution-from-s3-bucket/), and other examples not using such security protection at all, this seems to be of less importance.
+
+### Note: The cloudfront logs are saved with several hours delay. But they are stored in the log bucket now. :-)
+
+- 
