@@ -1,0 +1,12 @@
+.DS_Store
+.terraform.lock.hcl
+.terraform/
+AWSinfrastructure/.DS_Store
+AWSinfrastructure/.terraform.lock.hcl
+AWSinfrastructure/.terraform/
+AWSinfrastructure/terraform.tfstate
+AWSinfrastructure/terraform.tfstate.backup
+inactive_files/
+*.tf
+!AWSinfrastructure/*.tf
+terraform.tfstate

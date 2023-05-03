@@ -42,7 +42,12 @@ resource "aws_s3_bucket_public_access_block" "redirect_bucket" {
 resource "aws_s3_bucket_policy" "give_read_access_to_redirect_bucket" {
   bucket = aws_s3_bucket.redirect_bucket.id
   policy = templatefile("templates/s3-policy.json", { bucket = var.bucket_name })
+  # avoid "Error putting S3 policy: AccessDenied: Access Denied"
   depends_on = [
-    aws_s3_bucket.redirect_bucket
+    aws_s3_bucket.redirect_bucket,
+    aws_s3_bucket_website_configuration.redirect_bucket,
+    aws_s3_bucket_acl.redirect_bucket,
+    aws_s3_bucket_ownership_controls.redirect_bucket,
+    aws_s3_bucket_public_access_block.redirect_bucket
   ]
 }

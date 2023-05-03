@@ -1,7 +1,11 @@
 # Cloudfront distribution for main s3 site.
 resource "aws_cloudfront_distribution" "www_s3_distribution" {
   origin {
-    domain_name = aws_s3_bucket.www_bucket.bucket_regional_domain_name
+    # It is necessary to use the website_endpoint here, since we are 
+    # redirecting to a website. Please ignore the related warning message.
+    # When encountering 'Error: Missing required argument' for 'origin_id',
+    # reapplying the terraform should fix it.
+    domain_name = aws_s3_bucket.www_bucket.website_endpoint
     #bucket_regional_domain_name
     origin_id   = "S3-www.${var.bucket_name}"
 
@@ -61,10 +65,15 @@ resource "aws_cloudfront_distribution" "www_s3_distribution" {
   tags = var.common_tags
 }
 
+
 # Cloudfront S3 for redirect to www.
 resource "aws_cloudfront_distribution" "redirect_s3_distribution" {
   origin {
-    domain_name = aws_s3_bucket.redirect_bucket.bucket_regional_domain_name
+    # It is necessary to use the website_endpoint here, since we are 
+    # redirecting to a website. Please ignore the related warning message.
+    # When encountering 'Error: Missing required argument' for 'origin_id',
+    # reapplying the terraform should fix it.
+    domain_name = aws_s3_bucket.redirect_bucket.website_endpoint
     #aws_s3_bucket.redirect_bucket.bucket_regional_domain_name
     origin_id   = "S3-${var.bucket_name}"
     custom_origin_config {

@@ -274,3 +274,22 @@ Eventually there is a setup that works with Terraform, but I solved it (for now)
 ![AWS website endpoint statement](AWS_website_endpoint_statement.png)
 
 I have done this for both cloudfront distributions, since it seems to be the correct setup. This is the main step for enabling the redirection and making the website accessible via 'daniel-wrede.de'. For editing the origin settings, it is necessary to disable the cloudfront distribution. After enabling both distributions, the error still persists. First invalidating the cloudfront distributions, and thereby resetting their caches, finally enables the redirection properly, so when accessing 'daniel-wrede.de', getting redirected to 'www.daniel-wrede.de'. *Beautiful!*
+
+## 2nd of May
+
+- found new tutorial for a static website using s3 bucket setup: <https://medium.com/runatlantis/hosting-our-static-site-over-ssl-with-s3-acm-cloudfront-and-terraform-513b799aec0f>
+- 
+
+## 3rd of May
+
+- Managed to find a setup using the 'website_endpoint' directly in the cloudfront distribution configuration:
+
+    ```terraform
+    # It is necessary to use the website_endpoint here, since we are
+    # redirecting to a website. Please ignore the related warning message
+    # When encountering 'Error: Missing required argument' for 'origin_id'
+    # reapplying the terraform should fix it
+    domain_name = aws_s3_bucket.www_bucket.website_endpoint
+    ```
+
+- 
