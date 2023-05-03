@@ -93,6 +93,7 @@ resource "aws_s3_bucket" "log_bucket" {
   bucket = var.log_bucket_name
   tags = var.common_tags
 }
+data "aws_canonical_user_id" "current" {}
 
 resource "aws_s3_bucket_ownership_controls" "log_bucket" {
   bucket = aws_s3_bucket.log_bucket.id
@@ -101,26 +102,61 @@ resource "aws_s3_bucket_ownership_controls" "log_bucket" {
   }
 }
 
-resource "aws_s3_bucket_public_access_block" "log_bucket" {
-  bucket = aws_s3_bucket.log_bucket.id
-
-  block_public_acls       = false
-  block_public_policy     = false
-  ignore_public_acls      = false
-  restrict_public_buckets = false
-}
-
-# enable public access for cloud distribution logs
-resource "aws_s3_bucket_acl" "log_bucket" {
-  depends_on = [
-    aws_s3_bucket_ownership_controls.log_bucket,
-    aws_s3_bucket_public_access_block.log_bucket,
-  ]
+resource "aws_s3_bucket_acl" "log_bucket_acl" {
+  depends_on = [aws_s3_bucket_ownership_controls.log_bucket]
 
   bucket = aws_s3_bucket.log_bucket.id
-  acl    = "public-read"
+  access_control_policy {
+    grant {
+      grantee {
+        id   = data.aws_canonical_user_id.current.id
+        type = "CanonicalUser"
+      }
+      permission = "READ"
+    }
+
+    grant {
+      grantee {
+        type = "Group"
+        uri  = "http://acs.amazonaws.com/groups/s3/LogDelivery"
+      }
+      permission = "FULL_CONTROL"
+    }
+
+    owner {
+      id = data.aws_canonical_user_id.current.id
+    }
+  }
 }
 
+# enable access only for cloud distribution logs
+# resource "aws_s3_bucket_acl" "log_bucket" {
+#   bucket = aws_s3_bucket.log_bucket.id
+
+#   depends_on = [
+#     aws_s3_bucket_ownership_controls.log_bucket,
+#     aws_s3_bucket_public_access_block.log_bucket,
+#   ]
+
+#   acl    = "public-read"
+# }
+
+
+# resource "aws_s3_bucket_ownership_controls" "log_bucket" {
+#   bucket = aws_s3_bucket.log_bucket.id
+#   rule {
+#     object_ownership = "BucketOwnerPreferred"
+#   }
+# }
+
+# resource "aws_s3_bucket_public_access_block" "log_bucket" {
+#   bucket = aws_s3_bucket.log_bucket.id
+
+#   block_public_acls       = false
+#   block_public_policy     = false
+#   ignore_public_acls      = false
+#   restrict_public_buckets = false
+# }
 
 # module "url_redirects" {
 #   source  = "operatehappy/s3-object-url-redirects/aws"

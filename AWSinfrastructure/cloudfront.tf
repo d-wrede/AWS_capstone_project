@@ -1,12 +1,9 @@
 # Cloudfront distribution for main s3 site.
 resource "aws_cloudfront_distribution" "www_s3_distribution" {
   origin {
-    # It is necessary to use the website_endpoint here, since we are 
-    # redirecting to a website. Please ignore the related warning message.
-    # When encountering 'Error: Missing required argument' for 'origin_id',
-    # reapplying the terraform should fix it.
-    domain_name = aws_s3_bucket.www_bucket.website_endpoint
-    #bucket_regional_domain_name
+    # for s3 website hosting it is important to use the website_endpoint of
+    # the website_configuration instead of the bucket itself.
+    domain_name = aws_s3_bucket_website_configuration.www_bucket.website_endpoint
     origin_id   = "S3-www.${var.bucket_name}"
 
     custom_origin_config {
@@ -69,12 +66,9 @@ resource "aws_cloudfront_distribution" "www_s3_distribution" {
 # Cloudfront S3 for redirect to www.
 resource "aws_cloudfront_distribution" "redirect_s3_distribution" {
   origin {
-    # It is necessary to use the website_endpoint here, since we are 
-    # redirecting to a website. Please ignore the related warning message.
-    # When encountering 'Error: Missing required argument' for 'origin_id',
-    # reapplying the terraform should fix it.
-    domain_name = aws_s3_bucket.redirect_bucket.website_endpoint
-    #aws_s3_bucket.redirect_bucket.bucket_regional_domain_name
+    # for s3 website hosting it is important to use the website_endpoint of
+    # the website_configuration instead of the bucket itself.
+    domain_name = aws_s3_bucket_website_configuration.redirect_bucket.website_endpoint
     origin_id   = "S3-${var.bucket_name}"
     custom_origin_config {
       http_port              = 80
@@ -116,6 +110,7 @@ resource "aws_cloudfront_distribution" "redirect_s3_distribution" {
     }
   }
 
+
   viewer_certificate {
     acm_certificate_arn      = var.ssl_certificate_arn
     ssl_support_method       = "sni-only"
@@ -124,10 +119,12 @@ resource "aws_cloudfront_distribution" "redirect_s3_distribution" {
 
   # Logging configuration
   logging_config {
-    include_cookies = false
     bucket          = "${aws_s3_bucket.log_bucket.bucket_domain_name}"
-    prefix          = "cloudfront/"
+    prefix          = "cloudfront_logs/"
+    #role_arn        = aws_iam_role.cloudfront_logs.arn
+    include_cookies = false
   }
 
   tags = var.common_tags
 }
+

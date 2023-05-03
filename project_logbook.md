@@ -278,7 +278,7 @@ I have done this for both cloudfront distributions, since it seems to be the cor
 ## 2nd of May
 
 - found new tutorial for a static website using s3 bucket setup: <https://medium.com/runatlantis/hosting-our-static-site-over-ssl-with-s3-acm-cloudfront-and-terraform-513b799aec0f>
-- 
+- checked: it is not necessary to ask for cookie consent, since the homepage does not use cookies
 
 ## 3rd of May
 
@@ -292,4 +292,18 @@ I have done this for both cloudfront distributions, since it seems to be the cor
     domain_name = aws_s3_bucket.www_bucket.website_endpoint
     ```
 
-- 
+- Following this official and recently posted doc for setting up the logging without using a public s3bucket: <https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/AccessLogs.html>
+
+    According to that, since April 28th 2023 it is necessary to "enable S3 access control lists (ACLs) for new S3 buckets being used for CloudFront standard logs", as it says. This is done by using an [example from terraform.io](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_acl).
+
+- checket license terms for the [website template](https://themewagon.com/themes/free-bootstrap-4-html-5-personal-portfolio-website-template-mark/) here: <https://themewagon.com/license/>
+  
+  It's free to use.
+
+- now it's official - there is a bug in the cloudfront distribution resource, as described here:
+  - <https://discuss.hashicorp.com/t/aws-cloudfront-origin-originname-bug/37997/4>
+  - <https://www.reddit.com/r/Terraform/comments/114uem0/comment/j92kx8q/>
+
+    Here I found the (implicit) solution to use the website endpoint given by the aws s3 bucket website configuration for the buckets, instead of using the bucket's own endpoints. And it works like a charme! **WOOT!**
+
+- Found an interesting repo for static website hosting using s3 bucket: <https://github.com/subaquatic-pierre/pwa-ci-cd>
