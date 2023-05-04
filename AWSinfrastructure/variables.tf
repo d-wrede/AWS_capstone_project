@@ -3,7 +3,7 @@ variable "region" {
   default     = "eu-central-1"
 }
 
-data "aws_canonical_user_id" "current" {}
+
 
 ####################
 # S3 variables
@@ -26,6 +26,11 @@ variable "log_bucket_name" {
   default     = "logbucket-daniel-wrede.de"
 }
 
+variable "email_bucket_name" {
+  type        = string
+  description = "The name of the S3 bucket for emails."
+  default     = "emails-daniel-wrede.de"
+}
 
 
 variable "common_tags" {

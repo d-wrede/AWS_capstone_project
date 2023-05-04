@@ -3,7 +3,7 @@ resource "aws_cloudfront_distribution" "www_s3_distribution" {
   origin {
     # for s3 website hosting it is important to use the website_endpoint of
     # the website_configuration instead of the bucket itself.
-    domain_name = aws_s3_bucket_website_configuration.www_bucket.website_endpoint
+    domain_name = aws_s3_bucket.www_bucket.bucket_regional_domain_name
     # aws_s3_bucket.www_bucket.bucket_regional_domain_name
     # aws_s3_bucket_website_configuration.www_bucket.website_endpoint
     origin_id   = "S3-www.${var.bucket_name}"
@@ -17,7 +17,7 @@ resource "aws_cloudfront_distribution" "www_s3_distribution" {
     #   origin_ssl_protocols   = ["TLSv1", "TLSv1.1", "TLSv1.2"]
     # }
     
-    used for s3 bucket access via origin_access_identity (then comment custom_origin_config block)
+    # used for s3 bucket access via origin_access_identity (then comment custom_origin_config block)
     s3_origin_config {
       origin_access_identity = aws_cloudfront_origin_access_identity.example.cloudfront_access_identity_path
     }

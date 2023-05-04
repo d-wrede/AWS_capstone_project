@@ -13,10 +13,6 @@ resource "aws_s3_bucket_website_configuration" "www_bucket" {
   }
 }
 
-resource "aws_cloudfront_origin_access_identity" "example" {
-  comment = "OAI for accessing S3 bucket content"
-}
-
 resource "aws_s3_bucket_policy" "give_read_access_to_www_bucket" {
   bucket = aws_s3_bucket.www_bucket.id
   # use the following policy, to enable access via custom header
@@ -38,6 +34,7 @@ resource "aws_s3_bucket_policy" "give_read_access_to_www_bucket" {
   #     }
   #   ]
   # })
+
   # use this policy, to enable access via origin_access_identity
   # but using the bucket_regional_domain_name in the cloudfront distribution
   # aws_s3_bucket.www_bucket.bucket_regional_domain_name
@@ -55,12 +52,10 @@ resource "aws_s3_bucket_policy" "give_read_access_to_www_bucket" {
     ]
   })
 
-  #policy = templatefile("templates/s3-policy.json", { bucket = "www.${var.bucket_name}" })
   # avoid "Error putting S3 policy: AccessDenied: Access Denied"
   depends_on = [
     aws_s3_bucket.redirect_bucket,
     aws_s3_bucket_website_configuration.redirect_bucket,
-    aws_s3_bucket_acl.redirect_bucket,
     aws_s3_bucket_ownership_controls.redirect_bucket,
     aws_s3_bucket_public_access_block.redirect_bucket
   ]
@@ -76,33 +71,11 @@ resource "aws_s3_bucket_ownership_controls" "www_bucket" {
 resource "aws_s3_bucket_public_access_block" "www_bucket" {
   bucket = aws_s3_bucket.www_bucket.id
 
-  block_public_acls       = false
-  block_public_policy     = false
-  ignore_public_acls      = false
-  restrict_public_buckets = false
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
 }
-
-# resource "aws_s3_bucket_acl" "www_bucket" {
-#   bucket = aws_s3_bucket.www_bucket.id
-#   access_control_policy {
-#     grant {
-#       grantee {
-#         type = "Group"
-#         uri  = "http://acs.amazonaws.com/groups/s3/LogDelivery"
-#       }
-#       permission = "FULL_CONTROL"
-#     }
-
-#     owner {
-#       id = data.aws_canonical_user_id.current.id
-#     }
-#   }
-
-#   depends_on = [
-#     aws_s3_bucket_ownership_controls.www_bucket,
-#     aws_s3_bucket_public_access_block.www_bucket,
-#   ]
-# }
 
 resource "null_resource" "upload_content" {
   triggers = {
@@ -110,21 +83,17 @@ resource "null_resource" "upload_content" {
     force_upload = "some-value"
   }
 
+  depends_on = [aws_s3_bucket.www_bucket]
+
   provisioner "local-exec" {
-    command = "aws s3 cp /Users/danielwrede/Documents/AWS_CloudDev/portfolio_website/ s3://${aws_s3_bucket.www_bucket.id}/ --recursive --acl public-read --no-progress"
+    # aws sts get-caller-identity; aws s3api get-bucket-acl --bucket ${aws_s3_bucket.www_bucket.id};
+    command = "aws s3 cp /Users/danielwrede/Documents/AWS_CloudDev/portfolio_website/ s3://${aws_s3_bucket.www_bucket.id}/ --no-progress --recursive"
   }
 }
 
 resource "aws_s3_bucket_cors_configuration" "example" {
   bucket = aws_s3_bucket.www_bucket.id
 
-  # cors_rule {
-  #   allowed_headers = ["*"]
-  #   allowed_methods = ["PUT", "POST"]
-  #   allowed_origins = ["https://www.${var.domain_name}"]
-  #   expose_headers  = ["ETag"]
-  #   max_age_seconds = 3000
-  # }
   cors_rule {
     allowed_headers = ["Authorization", "Content-Length"]
     allowed_methods = ["GET", "POST"]
@@ -137,109 +106,3 @@ resource "aws_s3_bucket_cors_configuration" "example" {
     allowed_origins = ["*"]
   }
 }
-
-######################
-# s3 bucket for logs #
-######################
-resource "aws_s3_bucket" "log_bucket" {
-  bucket = var.log_bucket_name
-  tags = var.common_tags
-  force_destroy = true
-}
-
-resource "aws_s3_bucket_ownership_controls" "log_bucket" {
-  bucket = aws_s3_bucket.log_bucket.id
-  rule {
-    object_ownership = "BucketOwnerPreferred"
-  }
-}
-
-resource "aws_s3_bucket_acl" "log_bucket_acl" {
-  depends_on = [aws_s3_bucket_ownership_controls.log_bucket]
-
-  bucket = aws_s3_bucket.log_bucket.id
-  access_control_policy {
-    grant {
-      grantee {
-        id   = data.aws_canonical_user_id.current.id
-        type = "CanonicalUser"
-      }
-      permission = "FULL_CONTROL"
-    }
-
-    grant {
-      grantee {
-        type = "Group"
-        uri  = "http://acs.amazonaws.com/groups/s3/LogDelivery"
-      }
-      permission = "FULL_CONTROL"
-    }
-
-    owner {
-      id = data.aws_canonical_user_id.current.id
-    }
-  }
-}
-
-# enable access only for cloud distribution logs
-# resource "aws_s3_bucket_acl" "log_bucket" {
-#   bucket = aws_s3_bucket.log_bucket.id
-
-#   depends_on = [
-#     aws_s3_bucket_ownership_controls.log_bucket,
-#     aws_s3_bucket_public_access_block.log_bucket,
-#   ]
-
-#   acl    = "public-read"
-# }
-
-
-# resource "aws_s3_bucket_ownership_controls" "log_bucket" {
-#   bucket = aws_s3_bucket.log_bucket.id
-#   rule {
-#     object_ownership = "BucketOwnerPreferred"
-#   }
-# }
-
-# resource "aws_s3_bucket_public_access_block" "log_bucket" {
-#   bucket = aws_s3_bucket.log_bucket.id
-
-#   block_public_acls       = false
-#   block_public_policy     = false
-#   ignore_public_acls      = false
-#   restrict_public_buckets = false
-# }
-
-# module "url_redirects" {
-#   source  = "operatehappy/s3-object-url-redirects/aws"
-#   version = "1.0.0"
-
-#   bucket = var.www_bucket.id
-#   urls = [
-#     var.urls,
-#     {
-#       source = "/"
-#       destination = "/index.html"
-#     }
-#   ]
-# }
-
-
-  # redirects = [
-  #   {
-  #     source_key = ""
-  #     target_url = "https://www.daniel-wrede.de"
-  #     http_redirect_code = "301"
-  #   }
-  # ]
-
-# module "static_website" {
-#   source = "git::https://github.com/terraform-aws-modules/terraform-aws-static-website.git"
-
-#   domain_name = "example.com"
-#   acm_certificate_arn = "arn:aws:acm:us-east-1:123456789012:certificate/12345678-1234-1234-1234-123456789012"
-#   hosted_zone_name = "example.com."
-#   index_document = "index.html"
-#   error_document = "error.html"
-#   enable_logs = true
-# }

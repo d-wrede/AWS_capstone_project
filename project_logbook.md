@@ -360,4 +360,34 @@ This works fine, using the 'aws_s3_bucket_website_configuration.www_bucket.websi
 
 ### Note: The cloudfront logs are saved with several hours delay. But they are stored in the log bucket now. :-)
 
-- 
+- www bucket (comprising the files): Uses CloudFront Origin Access Identity (OAI) to restrict access to the S3 bucket, providing a high level of security. However, this approach does not allow using S3 bucket website features. The bucket is not public.
+- redirect bucket: Utilizes custom headers in the S3 bucket policy to restrict access only to the CloudFront distribution. This approach provides medium security since the header is stored in Terraform files, which may be publicly available on GitHub. Bucket access is limited to 'only authorized users of this account'. To improve security, consider using an Origin Access Identity for the redirect bucket as well.
+- log bucket: Grants access to the S3 Log Delivery group via an Access Control List (ACL), ensuring a secure connection while using AWS services for logging purposes. This is a standard and secure way to grant access to AWS services.
+
+
+## 4th of May
+
+- These steps were taken to enable email services using Amazon Web Services (AWS). The main components involved in this setup include AWS Simple Email Service (SES), S3, Lambda, and Route 53.
+  - followed these guides:
+    - <https://aws.amazon.com/blogs/messaging-and-targeting/forward-incoming-email-to-an-external-destination/>
+    - <https://docs.aws.amazon.com/ses/latest/dg/receiving-email-receipt-rules-console-walkthrough.html>
+  - Configure AWS providers:
+    - Set up AWS providers for the main region (eu-central-1), ACM (us-east-1), and SES (eu-west-1) in the Terraform configuration file.
+    - Set up the email S3 bucket: Create an S3 bucket in the eu-west-1 region to store incoming emails.
+    - Verify the domain in SES: Verify the domain (daniel-wrede.de) in the SES console (eu-west-1) to allow sending and receiving emails using the domain.
+    - Configure DNS records: Create an MX record in Route 53 to route incoming emails to the SES service in the eu-west-1 region.
+    - Create SES rule set and receipt rules: Configure a rule set in SES and create receipt rules to process incoming emails, such as saving them to the S3 bucket and invoking a Lambda function for email forwarding.
+    - Set up the Lambda function: Create a Lambda function in the eu-west-1 region with a Python runtime and an associated IAM role.
+    - Provide the Lambda function with necessary permissions to access the S3 bucket and use the SES service.
+    - Configure the Lambda function's environment variables, including the S3 bucket name, email sender, email recipient, and region.
+    - Write and deploy the Python code to handle email forwarding.
+    - Configure the S3 bucket policy: Update the bucket policy to allow the SES service to put objects (emails) into the bucket.
+    - Ensure that the Lambda function has the necessary permissions to access the objects in the bucket.
+    - Test the email setup: Verify the email address used for sending emails (e.g., projects@daniel-wrede.de) and confirm the verification email sent by AWS. Test the email forwarding functionality by sending an email to the verified address and checking if it is correctly forwarded to the intended recipient.
+  - Debugging the Lambda email forwarding issue:
+    - Identified that the Lambda function was unable to access the S3 bucket containing the email.
+    - Reviewed the IAM policies and S3 bucket policies to ensure proper access permissions.
+    - Ensured the Lambda function was using the correct IAM role, LambdaEmailRole, and the bucket name was specified correctly in the Lambda function's environment variables.
+    - Made sure the S3 bucket policy allowed the LambdaEmailRole to perform the s3:GetObject action.
+    - Tested the Lambda function again, and it successfully forwarded the email as an EML file.
+- receive emails via contact form
