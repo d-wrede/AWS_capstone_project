@@ -40,17 +40,6 @@ resource "aws_s3_bucket_policy" "give_read_access_to_redirect_bucket" {
   ]
 }
 
-
-# resource "aws_s3_bucket_acl" "redirect_bucket" {
-#   depends_on = [
-#     aws_s3_bucket_ownership_controls.redirect_bucket,
-#     aws_s3_bucket_public_access_block.redirect_bucket,
-#   ]
-
-#   bucket = aws_s3_bucket.redirect_bucket.id
-#   acl    = "public-read"
-# }
-
 resource "aws_s3_bucket_ownership_controls" "redirect_bucket" {
   bucket = aws_s3_bucket.redirect_bucket.id
   rule {
@@ -66,3 +55,15 @@ resource "aws_s3_bucket_public_access_block" "redirect_bucket" {
   ignore_public_acls      = true
   restrict_public_buckets = true
 }
+
+
+
+# resource "aws_s3_bucket_acl" "redirect_bucket" {
+#   depends_on = [
+#     aws_s3_bucket_ownership_controls.redirect_bucket,
+#     aws_s3_bucket_public_access_block.redirect_bucket,
+#   ]
+
+#   bucket = aws_s3_bucket.redirect_bucket.id
+#   acl    = "public-read"
+# }

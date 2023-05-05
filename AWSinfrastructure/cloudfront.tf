@@ -109,14 +109,14 @@ resource "aws_cloudfront_distribution" "redirect_s3_distribution" {
     cached_methods   = ["GET", "HEAD"]
     target_origin_id = "S3-${var.bucket_name}"
 
-    forwarded_values {
-      query_string = true
+    
 
+    forwarded_values {
+      query_string = false
+      headers = ["Origin", "X-CloudFront-Access"]
       cookies {
         forward = "none"
       }
-
-      headers = ["Origin"]
     }
 
     viewer_protocol_policy = "allow-all"

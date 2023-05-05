@@ -481,4 +481,4 @@ This works fine, using the 'aws_s3_bucket_website_configuration.www_bucket.websi
     │   16: resource "aws_s3_bucket_policy" "give_read_access_to_redirect_bucket" {
     ```
 
-    Stepped through older commits, terraform destroy and apply to find a working version. The commit (2 steps back) works, but with an aws_s3_bucket_acl.redirect_bucket instead of an aws_s3_bucket_policy.
+    Stepped through older commits, terraform destroy and apply to find a working version. The commit (2 steps back) works, but with an aws_s3_bucket_acl.redirect_bucket instead of an aws_s3_bucket_policy. Compared files, tried 'terraform init'. I found the error. It was related to a mismatch in between the "aws_s3_bucket_public_access_block", restricting public policies, and the policy, attempting to set the bucket to public. This is related to the configuration done on the [3rd of May](3rd of May), configuring the buckets to private. My guess is, that the error first occurred now, after having destroyed and rebuilt the infrastructure. 
