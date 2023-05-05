@@ -390,4 +390,93 @@ This works fine, using the 'aws_s3_bucket_website_configuration.www_bucket.websi
     - Ensured the Lambda function was using the correct IAM role, LambdaEmailRole, and the bucket name was specified correctly in the Lambda function's environment variables.
     - Made sure the S3 bucket policy allowed the LambdaEmailRole to perform the s3:GetObject action.
     - Tested the Lambda function again, and it successfully forwarded the email as an EML file.
-- receive emails via contact form
+- found some expandable table templates giving better overview over my list of competences:
+  - <https://mdbootstrap.com/docs/standard/extended/responsive-table/>
+  - <https://stackblitz.com/angular/eaajjobynjkl?file=src%2Fapp%2Ftable-expandable-rows-example.html>
+  - <https://adminlte.io/docs/3.1/javascript/expandable-tables.html>
+  - <https://www.geeksforgeeks.org/how-to-make-html-table-expand-on-click-using-javascript/>
+- implementing receipt rule set and receipt rules in terraform, using these AWS CLI commands to retrieve the configuration from the SES console setup used:
+
+    ```bash
+    aws ses list-receipt-rule-sets --region eu-west-1
+    aws ses describe-receipt-rule-set --rule-set-name daniel-wrede.de --region eu-west-1
+    ```
+    
+    Response:
+    ```
+    {
+        "Metadata": {
+            "Name": "daniel-wrede.de",
+            "CreatedTimestamp": "2023-05-04T08:45:43.741000+00:00"
+        },
+        "Rules": [
+            {
+                "Name": "forward_mails",
+                "Enabled": true,
+                "TlsPolicy": "Optional",
+                "Recipients": [
+                    "daniel-wrede.de"
+                ],
+                "Actions": [
+                    {
+                        "LambdaAction": {
+                            "FunctionArn": "arn:aws:lambda:eu-west-1:792277894863:function:EmailForwarder",
+                            "InvocationType": "Event"
+                        }
+                    }
+                ],
+                "ScanEnabled": true
+            },
+            {
+                "Name": "mails_to_bucket",
+                "Enabled": true,
+                "TlsPolicy": "Optional",
+                "Recipients": [
+                    "daniel-wrede.de"
+                ],
+                "Actions": [
+                    {
+                        "S3Action": {
+                            "BucketName": "emails-daniel-wrede.de",
+                            "ObjectKeyPrefix": "emails"
+                        }
+                    }
+                ],
+                "ScanEnabled": true
+            }
+        ]
+    }
+    ```
+
+    Experiencing quite some trouble at setting up the lambda action for email forwarding in the receipt rule, receiving this error message:
+
+    ```
+    │ Error: updating SES Receipt Rule (manage-emails-rule): InvalidLambdaFunction: Could not invoke Lambda function: arn:aws:lambda:eu-west-1:792277894863:function:EmailForwarder
+    │       status code: 400, request id: 67bcdb57-b306-468c-a621-78f1b791a3a9
+    │
+    │   with aws_ses_receipt_rule.rule,
+    │   on ses.tf line 16, in resource "aws_ses_receipt_rule" "rule":
+    │   16: resource "aws_ses_receipt_rule" "rule" {
+    ```
+
+    Setting up another receipt rule with the lambda action in the SES console works without issues. It is assumed being related to the 'aws_lambda_permission' resource. Attempting to 
+
+
+## 5th of May
+
+- browsing through the terraform modules and guides for static website hosting using s3, cloudfront and route53, I don't find any up-to-date solution using s3 website bucket redirection. They are either outdated, using the website endpoint as domain name, or only using one bucket. One such quite comprehensive module applying redirection, but unfortunately outdated, is found [here](https://github.com/7hoenix/terraform-website-s3-cloudfront-route53).
+- continuing working on the receipt rule set, comparing the permissions to invoke the lambda function created via terraform with those created via SES console. Using the following AWS CLI command, a different ARN syntax has been detected and successful corrected:
+  
+    ```aws lambda get-policy --function-name EmailForwarder --query 'Policy' --output text --region eu-west-1 | jq .```
+
+- encountering error from redirect_bucket policy:
+
+    ```
+    │ Error: Error putting S3 policy: AccessDenied: Access Denied
+
+    │       status code: 403, request id: RB7J0MYG51H482K9, host id: CvRqCirGAE1GYRmdLSP0G1mA/pmEQvOdX53+Ua7S448Ye1HTyAYvVd7g9mhpGbyadPOrNtiJoZ8=
+    │
+    │   with aws_s3_bucket_policy.give_read_access_to_redirect_bucket,
+    │   on s3_redirect_bucket.tf line 16, in resource "aws_s3_bucket_policy" "give_read_access_to_redirect_bucket":
+    │   16: resource "aws_s3_bucket_policy" "give_read_access_to_redirect_bucket" {
+    ```

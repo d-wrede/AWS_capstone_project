@@ -79,6 +79,10 @@ resource "aws_cloudfront_distribution" "www_s3_distribution" {
   tags = var.common_tags
 }
 
+resource "aws_cloudfront_origin_access_identity" "example" {
+  comment = "OAI for accessing S3 bucket content"
+}
+
 
 # Cloudfront S3 for redirect to www.
 resource "aws_cloudfront_distribution" "redirect_s3_distribution" {

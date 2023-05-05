@@ -21,8 +21,3 @@ provider "aws" {
   alias  = "ses_provider"
   region = "eu-west-1"
 }
-
-
-resource "aws_cloudfront_origin_access_identity" "example" {
-  comment = "OAI for accessing S3 bucket content"
-}

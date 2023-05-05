@@ -3,6 +3,11 @@ variable "region" {
   default     = "eu-central-1"
 }
 
+variable "ses_region" {
+  description = "The AWS region to use for SES"
+  default     = "eu-west-1"
+}
+
 
 
 ####################

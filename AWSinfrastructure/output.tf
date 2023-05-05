@@ -7,6 +7,11 @@ output "cloudfront_distribution_id" {
   value = aws_cloudfront_distribution.www_s3_distribution.id
 }
 
+output "lambda_function_arn" {
+  value = aws_lambda_function.email_forwarder.arn
+  description = "The ARN of the Lambda function for email forwarding"
+}
+
 
 # AWS CLI commands
 # aws s3 website s3://portfolio-page-bucket-danielwrede/ --index-document index.html
