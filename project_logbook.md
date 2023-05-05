@@ -480,3 +480,5 @@ This works fine, using the 'aws_s3_bucket_website_configuration.www_bucket.websi
     │   on s3_redirect_bucket.tf line 16, in resource "aws_s3_bucket_policy" "give_read_access_to_redirect_bucket":
     │   16: resource "aws_s3_bucket_policy" "give_read_access_to_redirect_bucket" {
     ```
+
+    Stepped through older commits, terraform destroy and apply to find a working version. The commit (2 steps back) works, but with an aws_s3_bucket_acl.redirect_bucket instead of an aws_s3_bucket_policy.
