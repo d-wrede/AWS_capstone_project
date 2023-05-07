@@ -50,3 +50,47 @@ resource "aws_iam_role_policy_attachment" "lambda_email_policy_attachment" {
   policy_arn = aws_iam_policy.lambda_email_policy.arn
   role       = aws_iam_role.lambda_email_role.name
 }
+
+
+############################################
+# chat API Gateway and Lambda Integration  #
+############################################
+
+# IAM role for the Lambda function
+resource "aws_iam_role" "chat_lambda_role" {
+  name = "chat_lambda_role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+# IAM policy to enable Lambda function to write logs
+resource "aws_iam_role_policy" "chat_lambda_logs_policy" {
+  name   = "chat_lambda_logs_policy"
+  # description = "Allow Lambda function to write logs to CloudWatch"
+  role   = aws_iam_role.chat_lambda_role.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents",
+        ]
+        Effect   = "Allow"
+        Resource = "*"
+      }
+    ]
+  })
+}

@@ -61,45 +61,6 @@ resource "aws_iam_role" "lambda_exec" {
 #  chat API Gateway and Lambda Integration  #
 #############################################
 
-# IAM role for the Lambda function
-resource "aws_iam_role" "chat_lambda_role" {
-  name = "chat_lambda_role"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Principal = {
-          Service = "lambda.amazonaws.com"
-        }
-      }
-    ]
-  })
-}
-
-# IAM policy to enable Lambda function to write logs
-resource "aws_iam_role_policy" "chat_lambda_logs_policy" {
-  name   = "chat_lambda_logs_policy"
-  role   = aws_iam_role.chat_lambda_role.id
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = [
-          "logs:CreateLogGroup",
-          "logs:CreateLogStream",
-          "logs:PutLogEvents",
-        ]
-        Effect   = "Allow"
-        Resource = "*"
-      }
-    ]
-  })
-}
-
-
 # Lambda function for chat
 resource "aws_lambda_function" "chat" {
   function_name = "chat_function"
@@ -108,11 +69,6 @@ resource "aws_lambda_function" "chat" {
   runtime       = "python3.8"
 
   filename = "lambda_function.zip"
-
-  depends_on = [
-    aws_iam_role_policy_attachment.lambda_logs,
-    aws_cloudwatch_log_group.chat_lambda_logs,
-  ]
 }
 
 # CloudWatch log group for the Lambda function
@@ -136,6 +92,6 @@ resource "aws_lambda_permission" "apigw_chat" {
   function_name = aws_lambda_function.chat.function_name
   principal     = "apigateway.amazonaws.com"
 
-  source_arn = "arn:aws:execute-api:${var.region}:${var.account_id}:${aws_api_gateway_rest_api.lambda_chat.id}/*/*"
+  source_arn = "arn:aws:execute-api:${var.region}:${data.aws_caller_identity.current.account_id}:${aws_api_gateway_rest_api.chat_api.id}/*/*"
 }
 
