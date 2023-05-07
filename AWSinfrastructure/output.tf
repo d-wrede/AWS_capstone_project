@@ -13,6 +13,12 @@ output "lambda_function_arn" {
 }
 
 
+output "api_gateway_url" {
+  value = "https://${aws_api_gateway_rest_api.api.id}.execute-api.${data.aws_region.current.name}.amazonaws.com/prod/chatbot"
+}
+
+
+
 # AWS CLI commands
 # aws s3 website s3://portfolio-page-bucket-danielwrede/ --index-document index.html
 # aws s3 cp /Users/danielwrede/Documents/AWS_CloudDev/capstone_project/homepage_content/mark/ s3://portfolio-page-bucket-danielwrede/ --recursive --acl public-read
