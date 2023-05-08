@@ -53,7 +53,7 @@ resource "aws_iam_role_policy_attachment" "lambda_email_policy_attachment" {
 
 
 ############################################
-# chat API Gateway and Lambda Integration  #
+# chat Lambda Integration  #
 ############################################
 
 # IAM role for the Lambda function
@@ -87,6 +87,52 @@ resource "aws_iam_role_policy" "chat_lambda_logs_policy" {
           "logs:CreateLogGroup",
           "logs:CreateLogStream",
           "logs:PutLogEvents",
+        ]
+        Effect   = "Allow"
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+############################################
+# API Gateway CloudWatch Logs  #
+############################################
+
+resource "aws_iam_role" "api_gateway_cloudwatch_logs" {
+  name = "api_gateway_cloudwatch_logs_role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "apigateway.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+
+resource "aws_iam_role_policy" "api_gateway_cloudwatch_logs_policy" {
+  name = "api_gateway_cloudwatch_logs_policy"
+  role = aws_iam_role.api_gateway_cloudwatch_logs.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:DescribeLogGroups",
+          "logs:DescribeLogStreams",
+          "logs:PutLogEvents",
+          "logs:GetLogEvents",
+          "logs:FilterLogEvents"
         ]
         Effect   = "Allow"
         Resource = "*"

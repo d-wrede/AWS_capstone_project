@@ -27,35 +27,6 @@ resource "aws_lambda_function" "email_forwarder" {
 }
 
 
-# Lambda function
-resource "aws_lambda_function" "chatbot_lambda" {
-  function_name = "chatbot-lambda"
-  handler       = "lambda_function.lambda_handler"
-  runtime       = "python3.8"
-
-  role = aws_iam_role.lambda_exec.arn
-
-  filename = "lambda_chat.zip" # Make sure to create this .zip file from your lambda_chat.py
-}
-
-# Lambda execution role
-resource "aws_iam_role" "lambda_exec" {
-  name = "lambda_exec"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Principal = {
-          Service = "lambda.amazonaws.com"
-        }
-      }
-    ]
-  })
-}
-
 
 #############################################
 #  chat API Gateway and Lambda Integration  #
@@ -68,7 +39,7 @@ resource "aws_lambda_function" "chat" {
   role          = aws_iam_role.chat_lambda_role.arn
   runtime       = "python3.8"
 
-  filename = "lambda_function.zip"
+  filename = "lambda_functions/lambda_chat.zip"
 }
 
 # CloudWatch log group for the Lambda function

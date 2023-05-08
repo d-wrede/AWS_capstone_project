@@ -72,3 +72,12 @@ variable "ssl_certificate_arn" {
   default = "arn:aws:acm:us-east-1:792277894863:certificate/fa6f889c-1f92-41a8-a849-50587fec57e9"
 }
 
+
+#########################
+# API Gateway variables # 
+#########################
+
+variable "stage_name" {
+  description = "The name of the API Gateway stage"
+  default     = "chat_api_stage"
+}

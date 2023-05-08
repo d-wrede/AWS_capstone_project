@@ -99,8 +99,8 @@ resource "aws_cloudfront_distribution" "redirect_s3_distribution" {
     }
   }
 
-  enabled         = true
-  is_ipv6_enabled = true
+  enabled             = true
+  is_ipv6_enabled     = true
   comment             = "S3 Bucket Redirect Distribution"
   aliases = [var.domain_name]
 
