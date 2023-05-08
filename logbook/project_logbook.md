@@ -490,9 +490,163 @@ This works fine, using the 'aws_s3_bucket_website_configuration.www_bucket.websi
 - finally found a very good and well explained issue thread (by accident) regarding the origin name of the cloudfront distribution: <https://github.com/hashicorp/terraform-provider-aws/issues/4757#issuecomment-422069327>
 - AWS guide for contact forms: <https://aws.amazon.com/blogs/architecture/create-dynamic-contact-forms-for-s3-static-websites-using-aws-lambda-amazon-api-gateway-and-amazon-ses/>
 
-# Monday, 8th of March
+# Monday afternoon, 8th of March
 
 - regarding the integration of a chat bot using chatGPT, the following guides show the approach:
   - <https://alexanderhose.com/implementing-chatgpt-on-aws-a-step-by-step-guide/>
   - <https://blog.koriel.kr/integrating-chatgpt-with-slack-using-aws-api-gateway-lambda-and-serverless-framework-a-step-by-step-guide-with-code-examples/>
-  - terraform configuration runs. Setting up API Gateway logs, noticing request response status '403' 'Forbidden'. Considering to add CORS rules, since using AJAX requests. Getting detailed request response information via browser inspect tool, seeing that an authentication token is missing. 
+  - terraform configuration runs. Setting up API Gateway logs, noticing request response status '403' 'Forbidden'. Considering to add CORS rules, since using AJAX requests. Getting detailed request response information via browser inspect tool, seeing that an authentication token is missing. So, implementing that! It's quite an act, but I'm on it. ;-) 
+
+  As the error seems to be related to CORS, stated by the request response, seen in the browser inspection tool with 'Transferred: CORS Missing Allow Origin', I found the post [Fixing AWS API Gateway CORS problems with Terraform](https://blog.bassemdy.com/2020/06/10/aws/architecture/microservices/api/terraform/fixing-cors-aws-api-gateway-terraform.html). 
+
+  aws apigateway get-rest-apis
+  {
+        "items": [
+            {
+                "id": "1g35nmhfbh",
+                "name": "ChatAPI",
+                "createdDate": "2023-05-08T09:10:29+02:00",
+                "version": "1.0",
+                "apiKeySource": "HEADER",
+                "endpointConfiguration": {
+                    "types": [
+                        "REGIONAL"
+                    ]
+                },
+                "disableExecuteApiEndpoint": false
+            }
+        ]
+    }
+
+  aws apigateway get-authorizers --rest-api-id 1g35nmhfbh
+  {
+        "items": []
+    }
+
+    aws apigateway get-usage-plans
+    {
+        "items": [
+            {
+                "id": "zmf4ls",
+                "name": "example-usage-plan",
+                "description": "Example usage plan for the ChatAPI",
+                "apiStages": [
+                    {
+                        "apiId": "1g35nmhfbh",
+                        "stage": "chat_api_stage"
+                    }
+                ]
+            }
+        ]
+    }
+
+    aws apigateway get-usage-plan-keys --usage-plan-id zmf4ls
+    {
+        "items": [
+            {
+                "id": "xxdb2cq04i",
+                "type": "API_KEY",
+                "value": "BaLULOA67K4zLcUnZgSnF2RkfSjedCkY1ZP9UTAR",
+                "name": "example-api-key"
+            }
+        ]
+    }
+
+    aws apigateway get-api-key --api-key xxdb2cq04i --include-value
+    {
+        "id": "xxdb2cq04i",
+        "value": "BaLULOA67K4zLcUnZgSnF2RkfSjedCkY1ZP9UTAR",
+        "name": "example-api-key",
+        "description": "Managed by Terraform",
+        "enabled": true,
+        "createdDate": "2023-05-08T16:19:27+02:00",
+        "lastUpdatedDate": "2023-05-08T16:19:27+02:00",
+        "stageKeys": [],
+        "tags": {}
+    }
+
+    aws apigateway get-resources --rest-api-id 1g35nmhfbh
+    {
+    "items": [
+            {
+                "id": "117k13",
+                "parentId": "ib882kvjn5",
+                "pathPart": "message",
+                "path": "/message",
+                "resourceMethods": {
+                    "OPTIONS": {},
+                    "POST": {}
+                }
+            },
+            {
+                "id": "ib882kvjn5",
+                "path": "/"
+            }
+        ]
+    }
+
+    aws apigateway get-method --rest-api-id 1g35nmhfbh --resource-id 117k13 --http-method POST
+    {
+        "httpMethod": "POST",
+        "authorizationType": "NONE",
+        "apiKeyRequired": false,
+        "methodResponses": {
+            "200": {
+                "statusCode": "200",
+                "responseParameters": {
+                    "method.response.header.Access-Control-Allow-Origin": false
+                }
+            }
+        },
+        "methodIntegration": {
+            "type": "AWS_PROXY",
+            "httpMethod": "POST",
+            "uri": "arn:aws:apigateway:eu-central-1:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-central-1:792277894863:function:chat_function/invocations",
+            "passthroughBehavior": "WHEN_NO_MATCH",
+            "timeoutInMillis": 29000,
+            "cacheNamespace": "w6qbww",
+            "cacheKeyParameters": []
+        }
+    }
+
+    aws apigateway get-method --rest-api-id 1g35nmhfbh --resource-id 117k13 --http-method OPTIONS
+    {
+        "httpMethod": "OPTIONS",
+        "authorizationType": "NONE",
+        "apiKeyRequired": false,
+        "methodResponses": {
+            "200": {
+                "statusCode": "200",
+                "responseParameters": {
+                    "method.response.header.Access-Control-Allow-Headers": false,
+                    "method.response.header.Access-Control-Allow-Methods": false,
+                    "method.response.header.Access-Control-Allow-Origin": false
+                }
+            }
+        },
+        "methodIntegration": {
+            "type": "MOCK",
+            "requestTemplates": {
+                "application/json": "{\"statusCode\":200}"
+            },
+            "passthroughBehavior": "WHEN_NO_MATCH",
+            "timeoutInMillis": 29000,
+            "cacheNamespace": "w6qbww",
+            "cacheKeyParameters": [],
+            "integrationResponses": {
+                "200": {
+                    "statusCode": "200",
+                    "responseParameters": {
+                        "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Requested-With'",
+                        "method.response.header.Access-Control-Allow-Methods": "'POST,OPTIONS'",
+                        "method.response.header.Access-Control-Allow-Origin": "'*'"
+                    },
+                    "responseTemplates": {
+                        "application/json": null
+                    }
+                }
+            }
+        }
+    }
+
+

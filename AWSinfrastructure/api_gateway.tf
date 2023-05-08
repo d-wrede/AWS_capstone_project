@@ -5,6 +5,11 @@
 # API Gateway REST API for the chat Lambda function
 resource "aws_api_gateway_rest_api" "chat_api" {
   name = "ChatAPI"
+  put_rest_api_mode = "merge"
+
+  endpoint_configuration {
+    types = ["REGIONAL"]
+  }
 
   body = jsonencode({
     openapi = "3.0.1"
@@ -28,6 +33,9 @@ resource "aws_api_gateway_rest_api" "chat_api" {
                 "Access-Control-Allow-Origin" = {
                   schema = {
                     type = "string"
+                  }
+                }
+              }
             }
           }
           security = [
@@ -63,13 +71,13 @@ resource "aws_api_gateway_rest_api" "chat_api" {
             type                 = "MOCK"
             passthroughBehavior  = "WHEN_NO_MATCH"
             requestTemplates = {
-              "application/json" = '{"statusCode": 200}'
+              "application/json" = jsonencode({"statusCode": 200})
             }
             responses = {
               "default" = {
                 statusCode = "200"
                 responseParameters = {
-                  "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+                  "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Requested-With'"
                   "method.response.header.Access-Control-Allow-Methods" = "'POST,OPTIONS'"
                   "method.response.header.Access-Control-Allow-Origin"  = "'*'"
                 }
@@ -83,11 +91,14 @@ resource "aws_api_gateway_rest_api" "chat_api" {
       }
     }
   })
-
-  endpoint_configuration {
-    types = ["REGIONAL"]
-  }
 }
+
+
+# resource "aws_api_gateway_resource" "message" {
+#   rest_api_id = aws_api_gateway_rest_api.chat_api.id
+#   parent_id   = aws_api_gateway_rest_api.chat_api.root_resource_id
+#   path_part   = "message"
+# }
 
 # API Gateway deployment for the chat Lambda function
 resource "aws_api_gateway_deployment" "chat_api_deployment" {
@@ -123,21 +134,30 @@ resource "aws_api_gateway_stage" "chat_api_stage" {
   depends_on = [aws_cloudwatch_log_group.chat_log_group]
 }
 
+
+
+# only needed for not-rest-API Gateways
 # enable logging for 'Full Request and Response Logs'
-resource "aws_api_gateway_method_settings" "example" {
-  rest_api_id = aws_api_gateway_rest_api.chat_api.id
-  stage_name  = aws_api_gateway_stage.chat_api_stage.stage_name
-  method_path = "*/*"
+# resource "aws_api_gateway_method" "message_post" {
+#   rest_api_id   = aws_api_gateway_rest_api.chat_api.id
+#   resource_id   = aws_api_gateway_resource.message.id
+#   http_method   = "POST"
+#   authorization = "NONE"
+#   api_key_required = true
+# }
 
-  settings {
-    logging_level  = "INFO"
-    metrics_enabled = true
-    throttling_burst_limit = 5
-    throttling_rate_limit = 10
+# resource "aws_api_gateway_method_settings" "example" {
+#   rest_api_id = aws_api_gateway_rest_api.chat_api.id
+#   stage_name  = aws_api_gateway_stage.chat_api_stage.stage_name
+#   method_path = "*/*"
 
-    api_key_required = true
-  }
-}
+#   settings {
+#     logging_level  = "INFO"
+#     metrics_enabled = true
+#     throttling_burst_limit = 5
+#     throttling_rate_limit = 10
+#   }
+# }
 
 
 resource "aws_api_gateway_account" "chat_api_gateway_account" {

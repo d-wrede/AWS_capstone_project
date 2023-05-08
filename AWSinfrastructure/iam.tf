@@ -95,9 +95,9 @@ resource "aws_iam_role_policy" "chat_lambda_logs_policy" {
   })
 }
 
-############################################
-# API Gateway CloudWatch Logs  #
-############################################
+#################################
+#  API Gateway CloudWatch Logs  #
+#################################
 
 resource "aws_iam_role" "api_gateway_cloudwatch_logs" {
   name = "api_gateway_cloudwatch_logs_role"
