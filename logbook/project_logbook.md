@@ -662,4 +662,49 @@ Gateway.png)
   - juhuu, received 'internal server error'! That indicates that the CORS problem is solved (by simplifying to simple CORS requests)
   - wow, my lambda function got triggered! I see logs in CloudWatch - it's an error message, but well!
   - Event format of AWS API Gateway in Lambda function: <https://docs.aws.amazon.com/lambda/latest/dg/services-apigateway.html#apigateway-example-event>
-  - 
+- Lambda setup / layers
+  - second [layer arn for OpenSSL](https://github.com/alexandredavi/openssl-lambda-layer): arn:aws:lambda:eu-central-1:034541671702:layer:openssl-lambda:1
+
+    This error seems difficult to solve:
+
+    [ERROR] Runtime.ImportModuleError: Unable to import module 'lambda_chat': urllib3 v2.0 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with OpenSSL 1.0.2k-fips  26 Jan 2017. See: <https://github.com/urllib3/urllib3/issues/2168>
+    Traceback (most recent call last):
+
+    The peculiarity is, that it is not described in any of the three available guides on using chatGPT with lambda, that I have found so far:
+    - <https://dev.to/aws-builders/creating-a-lambda-function-to-call-chatgpt-pj>
+    - <https://alexanderhose.com/implementing-chatgpt-on-aws-a-step-by-step-guide/>
+    - <https://blog.koriel.kr/integrating-chatgpt-with-slack-using-aws-api-gateway-lambda-and-serverless-framework-a-step-by-step-guide-with-code-examples/>
+
+    I have tried solving it by adding another lambda layer with updated OpenSSL to it, resulting in a different error:
+
+    [ERROR] Runtime.ImportModuleError: Unable to import module 'lambda_chat': cannot import name 'DEFAULT_CIPHERS' from 'urllib3.util.ssl_' (/opt/python/urllib3/util/ssl_.py)
+    Traceback (most recent call last):
+
+    The prior error, regarding the urllib3 and ssl versions is actually brand new, with urllib3 v2.0. As stated in above error message: <https://github.com/urllib3/urllib3/issues/2168>
+
+    One related comment, by pquentin from the 5th of May, 2023:
+
+    @kid-92 You can upgrade to Python 3.9 or Python 3.10 as the AWS Lambda runtime for those function come with OpenSSL 1.1.1 which will work with urllib3 2.0. Alternatively, you need to pip install urllib3<2 to get urllib3 1.26.x that will work with older versions of OpenSSL. I'm not familiar with AWS Lambda, how did you install your dependencies?@kid-92 You can upgrade to Python 3.9 or Python 3.10 as the AWS Lambda runtime for those function come with OpenSSL 1.1.1 which will work with urllib3 2.0. Alternatively, you need to pip install urllib3<2 to get urllib3 1.26.x that will work with older versions of OpenSSL. I'm not familiar with AWS Lambda, how did you install your dependencies?
+
+    Applying above method seems to work. I did it by creating one zip file, containing the script and the dependencies, defining the to be installed modules by a requirements.txt file.
+
+    - next error:
+
+        [ERROR] ClientError: An error occurred (AccessDeniedException) when calling the GetSecretValue operation: User: arn:aws:sts::792277894863:assumed-role/chat_lambda_role/chat_function is not authorized to perform: secretsmanager:GetSecretValue on resource: chatGPT_key because no identity-based policy allows the secretsmanager:GetSecretValue action
+        Traceback (most recent call last):
+          File "/var/task/lambda_chat.py", line 61, in lambda_handler
+            response = message_chatgpt(message_text)
+          File "/var/task/lambda_chat.py", line 38, in message_chatgpt
+            openai.api_key = get_secret()
+          File "/var/task/lambda_chat.py", line 27, in get_secret
+            raise e
+          File "/var/task/lambda_chat.py", line 22, in get_secret
+            get_secret_value_response = client.get_secret_value(
+          File "/var/runtime/botocore/client.py", line 530, in _api_call
+            return self._make_api_call(operation_name, kwargs)
+          File "/var/runtime/botocore/client.py", line 960, in _make_api_call
+            raise error_class(parsed_response, operation_name)
+
+        That is a new error, and a good reason to be glad and happy and say, it's enough for today.
+
+## 

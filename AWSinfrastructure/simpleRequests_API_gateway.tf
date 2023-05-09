@@ -48,6 +48,11 @@ resource "aws_api_gateway_deployment" "chat_api_deployment" {
   rest_api_id = aws_api_gateway_rest_api.chat_api.id
   stage_name  = var.stage_name
 
+  # access_log_settings {
+  #   destination_arn = aws_cloudwatch_log_group.chat_log_group.arn
+  #   format          = "$context.identity.sourceIp $context.identity.caller $context.identity.user [$context.requestTime] \"$context.httpMethod $context.resourcePath $context.protocol\" $context.status $context.responseLength $context.requestId"
+  # }
+
   # redeploy when any of the following resources are changed
   triggers = {
     redeployment = sha1(jsonencode([
@@ -59,8 +64,20 @@ resource "aws_api_gateway_deployment" "chat_api_deployment" {
       #aws_api_gateway_integration.options_message.id,
     ]))
   }
+
+  depends_on = [aws_cloudwatch_log_group.chat_log_group]
 }
 
+########
+# enable logging
+#######
+resource "aws_api_gateway_account" "chat_api_gateway_account" {
+  cloudwatch_role_arn = aws_iam_role.api_gateway_cloudwatch_logs.arn
+}
+resource "aws_cloudwatch_log_group" "chat_log_group" {
+  name              = "API-Gateway-Execution-Logs_${aws_api_gateway_rest_api.chat_api.id}/${var.stage_name}"
+  retention_in_days = 7
+}
 
 #######
 # for preflight CORS requests

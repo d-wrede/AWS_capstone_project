@@ -48,14 +48,14 @@ def message_chatgpt(message):
         presence_penalty=0
         )
     print("response received: ", response)
-    print("response.choices[0].text: ", response.choices[0].text")
+    print("response.choices[0].text: ", response.choices[0].text)
     return response.choices[0].text.strip()
 
 
 def lambda_handler(event, context):
     """Lambda function handler"""
     print("incoming event: ", event)
-    print("incoming context: ", context")
+    print("incoming context: ", context)
     print("incoming event body: ", event['body'])
     message_text = event['body']
     response = message_chatgpt(message_text)
