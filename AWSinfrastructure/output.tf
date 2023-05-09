@@ -17,10 +17,10 @@ output "api_gateway_url" {
   value = "https://${aws_api_gateway_rest_api.chat_api.id}.execute-api.${var.region}.amazonaws.com/prod/chatbot"
 }
 
-output "api_key_value" {
-  value = aws_api_gateway_api_key.example.value
-  sensitive = true
-}
+# output "api_key_value" {
+#   value = aws_api_gateway_api_key.example.value
+#   sensitive = true
+# }
 
 # to get the api_key_value
 # terraform output -raw api_key_value

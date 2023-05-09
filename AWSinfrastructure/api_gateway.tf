@@ -38,9 +38,6 @@ resource "aws_api_gateway_rest_api" "chat_api" {
               }
             }
           }
-          security = [
-            {api_key = []}
-          ]
         }
         options = {
           responses = {
@@ -124,7 +121,6 @@ resource "aws_api_gateway_stage" "chat_api_stage" {
   format          = "$context.identity.sourceIp $context.identity.caller $context.identity.user [$context.requestTime] \"$context.httpMethod $context.resourcePath $context.protocol\" $context.status $context.responseLength $context.requestId"
 }
 
-
   xray_tracing_enabled = true
 
   tags = {
@@ -168,26 +164,5 @@ resource "aws_api_gateway_account" "chat_api_gateway_account" {
 resource "aws_cloudwatch_log_group" "chat_log_group" {
   name              = "API-Gateway-Execution-Logs_${aws_api_gateway_rest_api.chat_api.id}/${var.stage_name}"
   retention_in_days = 7
-}
-
-# secure API Gateway access with an API key
-resource "aws_api_gateway_api_key" "example" {
-  name = "example-api-key"
-}
-
-resource "aws_api_gateway_usage_plan" "example" {
-  name        = "example-usage-plan"
-  description = "Example usage plan for the ChatAPI"
-
-  api_stages {
-    api_id = aws_api_gateway_rest_api.chat_api.id
-    stage  = aws_api_gateway_stage.chat_api_stage.stage_name
-  }
-}
-
-resource "aws_api_gateway_usage_plan_key" "example" {
-  key_id        = aws_api_gateway_api_key.example.id
-  key_type      = "API_KEY"
-  usage_plan_id = aws_api_gateway_usage_plan.example.id
 }
 
