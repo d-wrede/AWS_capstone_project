@@ -661,4 +661,5 @@ Gateway.png)
   - an API key is not strictly necessary for the API Gateway setup
   - juhuu, received 'internal server error'! That indicates that the CORS problem is solved (by simplifying to simple CORS requests)
   - wow, my lambda function got triggered! I see logs in CloudWatch - it's an error message, but well!
+  - Event format of AWS API Gateway in Lambda function: <https://docs.aws.amazon.com/lambda/latest/dg/services-apigateway.html#apigateway-example-event>
   - 

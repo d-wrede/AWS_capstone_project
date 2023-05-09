@@ -66,3 +66,23 @@ resource "aws_lambda_permission" "apigw_chat" {
   source_arn = "arn:aws:execute-api:${var.region}:${data.aws_caller_identity.current.account_id}:${aws_api_gateway_rest_api.chat_api.id}/*/*"
 }
 
+resource "aws_lambda_permission" "secrets_manager_access" {
+  statement_id  = "AllowLambdaToAccessSecretsManager"
+  action       = "lambda:GetSecretValue"
+  function_name = aws_lambda_function.chat.arn
+  principal    = "secretsmanager.amazonaws.com"
+
+  source_arn = "arn:aws:secretsmanager:${var.region}:${data.aws_caller_identity.current.account_id}:secret:chatGPT_key"
+}
+
+
+resource "aws_lambda_layer_version" "example" {
+  filename         = var.layer_filename
+  layer_name       = "lambda-layer"
+  source_code_hash = filebase64sha256("${var.layer_filename}")
+  # compatible_runtimes = [
+  #   "python3.8",
+  # ]
+  # skip_destroy = true
+}
+

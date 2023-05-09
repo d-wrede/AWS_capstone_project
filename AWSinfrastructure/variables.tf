@@ -95,3 +95,8 @@ variable "chat_function_name" {
   description = "The name of the Lambda function"
   default     = "chat_function"
 }
+
+variable "layer_filename" {
+  description = "The filename of the Lambda layer"
+  default     = "lambda_layers/python.zip"
+}
