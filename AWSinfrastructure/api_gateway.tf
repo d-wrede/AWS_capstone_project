@@ -4,7 +4,7 @@
 
 # API Gateway REST API for the chat Lambda function
 resource "aws_api_gateway_rest_api" "chat_api" {
-  name = "ChatAPI"
+  name              = "ChatAPI"
   put_rest_api_mode = "merge"
 
   endpoint_configuration {
@@ -35,9 +35,36 @@ resource "aws_api_gateway_rest_api" "chat_api" {
                     type = "string"
                   }
                 }
+                "Access-Control-Allow-Headers" = {
+                  schema = {
+                    type = "string"
+                  }
+                }
+                "Access-Control-Allow-Methods" = {
+                  schema = {
+                    type = "string"
+                  }
+                }
               }
             }
           }
+          x-amazon-apigateway-integration = {
+            httpMethod           = "POST"
+            payloadFormatVersion = "1.0"
+            type                 = "AWS_PROXY"
+            uri                  = "arn:aws:apigateway:${var.region}:lambda:path/2015-03-31/functions/${aws_lambda_function.chat.arn}/invocations"
+            responses = {
+              "200" = {
+                statusCode = "200"
+                responseParameters = {
+                  "method.response.header.Access-Control-Allow-Headers" = true
+                  "method.response.header.Access-Control-Allow-Methods" = true
+                  "method.response.header.Access-Control-Allow-Origin"  = true
+                }
+              }
+            }
+          }
+
         }
         options = {
           responses = {
@@ -68,15 +95,15 @@ resource "aws_api_gateway_rest_api" "chat_api" {
             type                 = "MOCK"
             passthroughBehavior  = "WHEN_NO_MATCH"
             requestTemplates = {
-              "application/json" = jsonencode({"statusCode": 200})
+              "application/json" = jsonencode({ "statusCode" : 200 })
             }
             responses = {
               "default" = {
                 statusCode = "200"
                 responseParameters = {
-                  "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Requested-With'"
-                  "method.response.header.Access-Control-Allow-Methods" = "'POST,OPTIONS'"
-                  "method.response.header.Access-Control-Allow-Origin"  = "'*'"
+                  "method.response.header.Access-Control-Allow-Headers" = true
+                  "method.response.header.Access-Control-Allow-Methods" = true
+                  "method.response.header.Access-Control-Allow-Origin"  = true
                 }
                 responseTemplates = {
                   "application/json" = ""
@@ -117,16 +144,16 @@ resource "aws_api_gateway_stage" "chat_api_stage" {
   stage_name    = var.stage_name
 
   access_log_settings {
-  destination_arn = aws_cloudwatch_log_group.chat_log_group.arn
-  format          = "$context.identity.sourceIp $context.identity.caller $context.identity.user [$context.requestTime] \"$context.httpMethod $context.resourcePath $context.protocol\" $context.status $context.responseLength $context.requestId"
-}
+    destination_arn = aws_cloudwatch_log_group.chat_log_group.arn
+    format          = "$context.identity.sourceIp $context.identity.caller $context.identity.user [$context.requestTime] \"$context.httpMethod $context.resourcePath $context.protocol\" $context.status $context.responseLength $context.requestId"
+  }
 
   xray_tracing_enabled = true
 
   tags = {
     "aws_api_gateway_account" = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${aws_iam_role.api_gateway_cloudwatch_logs.name}"
   }
-  
+
   depends_on = [aws_cloudwatch_log_group.chat_log_group]
 }
 

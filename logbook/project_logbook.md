@@ -650,3 +650,12 @@ This works fine, using the 'aws_s3_bucket_website_configuration.www_bucket.websi
     }
 
 
+## Tuesday, 9th of May
+
+- Things learned about API Gateway setup:
+  - From the terraform.io docs:
+
+    [WARN: When importing Open API Specifications with the body argument, by default the API Gateway REST API will be replaced with the Open API Specification thus removing any existing methods, resources, integrations, or endpoints. Endpoint mutations are asynchronous operations, and race conditions with DNS are possible. To overcome this limitation, use the put_rest_api_mode attribute and set it to merge.](images/warning_restAPI
+Gateway.png)
+  - check if the API Gateway output URL is correct ;-)
+  - an API key is not strictly necessary for the API Gateway setup

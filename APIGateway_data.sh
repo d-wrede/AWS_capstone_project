@@ -6,6 +6,10 @@ resource_id=$(aws apigateway get-resources --rest-api-id $rest_api_id --query 'i
 usage_plan_id=$(aws apigateway get-usage-plans --query 'items[0].id' --output text)
 api_key=$(aws apigateway get-usage-plan-keys --usage-plan-id $usage_plan_id --query 'items[0].id' --output text)
 
+# remove old results.txt file
+rm results.txt
+echo "old results file removed"
+ls results.txt
 
 # Run commands and save output to results.txt
 {
@@ -21,13 +25,13 @@ api_key=$(aws apigateway get-usage-plan-keys --usage-plan-id $usage_plan_id --qu
   echo -e "\nGET OPTIONS METHOD:"
   aws apigateway get-method --rest-api-id $rest_api_id --resource-id $resource_id --http-method OPTIONS
 
-  echo -e "\nGET USAGE PLANS:"
-  aws apigateway get-usage-plans
+  # echo -e "\nGET USAGE PLANS:"
+  # aws apigateway get-usage-plans
 
-  echo -e "\nGET USAGE PLAN KEYS:"
-  aws apigateway get-usage-plan-keys --usage-plan-id $usage_plan_id
+  # echo -e "\nGET USAGE PLAN KEYS:"
+  # aws apigateway get-usage-plan-keys --usage-plan-id $usage_plan_id
 
-  echo -e "\nGET API KEY:"
-  aws apigateway get-api-key --api-key $api_key --include-value
+  #echo -e "\nGET API KEY:"
+  #aws apigateway get-api-key --api-key $api_key --include-value
 
 } > results.txt
