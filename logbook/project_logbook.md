@@ -659,3 +659,6 @@ This works fine, using the 'aws_s3_bucket_website_configuration.www_bucket.websi
 Gateway.png)
   - check if the API Gateway output URL is correct ;-)
   - an API key is not strictly necessary for the API Gateway setup
+  - juhuu, received 'internal server error'! That indicates that the CORS problem is solved (by simplifying to simple CORS requests)
+  - wow, my lambda function got triggered! I see logs in CloudWatch - it's an error message, but well!
+  - 

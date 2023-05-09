@@ -14,7 +14,7 @@ output "lambda_function_arn" {
 
 
 output "api_gateway_url" {
-  value = "https://${aws_api_gateway_rest_api.chat_api.id}.execute-api.${var.region}.amazonaws.com/${var.stage_name}"
+  value = "https://${aws_api_gateway_rest_api.chat_api.id}.execute-api.${var.region}.amazonaws.com/${var.stage_name}/${var.gw_resource_path_part}"
 }
 
 # output "api_key_value" {

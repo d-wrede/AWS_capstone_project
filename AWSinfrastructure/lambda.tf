@@ -34,8 +34,8 @@ resource "aws_lambda_function" "email_forwarder" {
 
 # Lambda function for chat
 resource "aws_lambda_function" "chat" {
-  function_name = "chat_function"
-  handler       = "lambda_function.lambda_handler"
+  function_name = var.chat_function_name
+  handler       = "lambda_chat.lambda_handler"
   role          = aws_iam_role.chat_lambda_role.arn
   runtime       = "python3.8"
 

@@ -22,8 +22,8 @@ ls results.txt
   echo -e "\nGET POST METHOD:"
   aws apigateway get-method --rest-api-id $rest_api_id --resource-id $resource_id --http-method POST
 
-  echo -e "\nGET OPTIONS METHOD:"
-  aws apigateway get-method --rest-api-id $rest_api_id --resource-id $resource_id --http-method OPTIONS
+  # echo -e "\nGET OPTIONS METHOD:"
+  # aws apigateway get-method --rest-api-id $rest_api_id --resource-id $resource_id --http-method OPTIONS
 
   # echo -e "\nGET USAGE PLANS:"
   # aws apigateway get-usage-plans

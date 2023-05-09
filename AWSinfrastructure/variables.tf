@@ -81,3 +81,17 @@ variable "stage_name" {
   description = "The name of the API Gateway stage"
   default     = "chat_api_stage"
 }
+
+variable "gw_resource_path_part" {
+  description = "The path part of the API Gateway resource"
+  default     = "message"
+}
+
+####################
+# Lambda variables #
+####################
+
+variable "chat_function_name" {
+  description = "The name of the Lambda function"
+  default     = "chat_function"
+}
