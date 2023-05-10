@@ -10,3 +10,4 @@ inactive_files/
 *.tf
 !AWSinfrastructure/*.tf
 terraform.tfstate
+gpt_request.py

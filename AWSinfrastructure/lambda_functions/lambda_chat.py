@@ -34,11 +34,13 @@ def get_secret():
     return api_key
 
 
-def message_chatgpt(message, conversation_history):
+def message_chatgpt(message, instructions, conversation_history):
     """Send message to chatGPT and return response"""
     print("conversation history: ", conversation_history)
     openai.api_key = get_secret()
-    conversation = conversation_history + [{"role": "user", "content": message}]
+    system_message = {"role": "system", "content": instructions}
+
+    conversation = [system_message] + conversation_history + [{"role": "user", "content": message}]
     print("conversation: ", conversation)
     response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo", messages=conversation, temperature=0.7
@@ -46,6 +48,8 @@ def message_chatgpt(message, conversation_history):
     print("response received: ", response)
     print("response content: ", response.choices[0].message.content.strip())
     return response.choices[0].message.content.strip()
+
+
 
 
 def read_conversation_from_s3(bucket, key):
@@ -73,6 +77,18 @@ def write_conversation_to_s3(bucket, key, conversation_history):
         print(f"Error writing conversation to S3: {e}")
 
 
+def read_instructions_from_s3(bucket, key):
+    """Read instructions from S3"""
+    s3 = boto3.client("s3")
+    try:
+        response = s3.get_object(Bucket=bucket, Key=key)
+        instructions = response["Body"].read().decode("utf-8")
+        return instructions
+    except Exception as e:
+        print(f"Error reading instructions from S3: {e}")
+        return ""
+
+
 def lambda_handler(event, context):
     """Lambda function handler"""
     print("incoming event: ", event)
@@ -88,13 +104,15 @@ def lambda_handler(event, context):
     bucket = "chat-daniel-wrede.de"
     key = f"conversations/{uuid}.json"
     conversation_history = read_conversation_from_s3(bucket, key)
+    instructions_key = "instructions/introductory_instructions.txt"
+    instructions = read_instructions_from_s3(bucket, instructions_key)
 
     # Process message and update conversation history
-    response = message_chatgpt(message_text, conversation_history)
+    response = message_chatgpt(message_text, instructions, conversation_history)
     print("response: ", response)
 
     # Write conversation history to S3
-    conversation_history.append({"role": "bot", "content": response.strip()})
+    conversation_history.append({"role": "assistant", "content": response.strip()})
     write_conversation_to_s3(bucket, key, conversation_history)
 
     return {
