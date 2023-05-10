@@ -65,7 +65,7 @@ resource "aws_api_gateway_deployment" "chat_api_deployment" {
     ]))
   }
 
-  depends_on = [aws_cloudwatch_log_group.chat_log_group]
+  # depends_on = [aws_cloudwatch_log_group.chat_log_group]
 }
 
 ########
@@ -74,10 +74,10 @@ resource "aws_api_gateway_deployment" "chat_api_deployment" {
 resource "aws_api_gateway_account" "chat_api_gateway_account" {
   cloudwatch_role_arn = aws_iam_role.api_gateway_cloudwatch_logs.arn
 }
-resource "aws_cloudwatch_log_group" "chat_log_group" {
-  name              = "API-Gateway-Execution-Logs_${aws_api_gateway_rest_api.chat_api.id}/${var.stage_name}"
-  retention_in_days = 7
-}
+# resource "aws_cloudwatch_log_group" "chat_log_group" {
+#   name              = "API-Gateway-Execution-Logs_${aws_api_gateway_rest_api.chat_api.id}/${var.stage_name}"
+#   retention_in_days = 7
+# }
 
 #######
 # for preflight CORS requests

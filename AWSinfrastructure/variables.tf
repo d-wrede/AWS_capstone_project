@@ -37,6 +37,12 @@ variable "email_bucket_name" {
   default     = "emails-daniel-wrede.de"
 }
 
+variable "chat_bucket_name" {
+  type        = string
+  description = "The name of the S3 bucket for chat content."
+  default     = "chat-daniel-wrede.de"
+}
+
 
 variable "common_tags" {
   description = "Common tags you want applied to all components."

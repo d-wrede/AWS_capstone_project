@@ -82,3 +82,12 @@ resource "aws_s3_bucket_policy" "SES_policy" {
   })
 }
 
+#############################
+# s3 bucket for lambda chat #
+#############################
+
+resource "aws_s3_bucket" "chat_bucket" {
+  bucket        = var.chat_bucket_name
+  tags          = var.common_tags
+  force_destroy = true
+}

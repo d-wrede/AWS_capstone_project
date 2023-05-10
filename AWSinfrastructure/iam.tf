@@ -95,6 +95,7 @@ resource "aws_iam_role_policy" "chat_lambda_logs_policy" {
   })
 }
 
+# IAM policy to enable Lambda function to get secrets from Secrets Manager
 resource "aws_iam_role_policy" "secrets_manager_access" {
   name = "secrets_manager_access"
   role = aws_iam_role.chat_lambda_role.id
@@ -111,6 +112,26 @@ resource "aws_iam_role_policy" "secrets_manager_access" {
     ]
   })
 }
+
+# IAM policy to enable Lambda function to access S3
+resource "aws_iam_role_policy" "s3_chat_access" {
+  name = "s3_chat_access"
+  role = aws_iam_role.chat_lambda_role.id
+  policy = jsonencode({
+    "Version" : "2012-10-17",
+    "Statement" : [
+      {
+        "Effect" : "Allow",
+        "Action" : [
+          "s3:GetObject",
+          "s3:PutObject"
+        ],
+        "Resource" : "${aws_s3_bucket.chat_bucket.arn}/*"
+      }
+    ]
+  })
+}
+
 
 #################################
 #  API Gateway CloudWatch Logs  #
