@@ -707,4 +707,6 @@ Gateway.png)
 
         That is a new error, and a good reason to be glad and happy and say, it's enough for today.
 
-## 
+## Wednesday, 10th of May 2023
+
+- continuing on yesterdays error message, noticing that the usage of a "aws_lambda_permission" resource in terraform is not helful in this case. It does not enable the lambda function to access another resource, but gives another resource access to the lambda function instead. In this case, according to [AWS Docs](https://docs.aws.amazon.com/secretsmanager/latest/userguide/auth-and-access_examples.html#auth-and-access_examples_read), a identity-based IAM policy should be used.

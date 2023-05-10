@@ -72,16 +72,16 @@ resource "aws_lambda_permission" "apigw_chat" {
   depends_on = [ aws_lambda_function.chat ]
 }
 
-resource "aws_lambda_permission" "secrets_manager_access" {
-  statement_id  = "AllowLambdaToAccessSecretsManager"
-  action       = "lambda:GetSecretValue"
-  function_name = aws_lambda_function.chat.arn
-  principal    = "secretsmanager.amazonaws.com"
+# resource "aws_lambda_permission" "secrets_manager_access" {
+#   statement_id  = "AllowLambdaToAccessSecretsManager"
+#   action       = "lambda:GetSecretValue"
+#   function_name = aws_lambda_function.chat.arn
+#   principal    = "secretsmanager.amazonaws.com"
 
-  source_arn = "arn:aws:secretsmanager:${var.region}:${data.aws_caller_identity.current.account_id}:secret:chatGPT_key"
+#   source_arn = "arn:aws:secretsmanager:${var.region}:${data.aws_caller_identity.current.account_id}:secret:chatGPT_key"
 
-  depends_on = [ aws_lambda_function.chat ]
-}
+#   depends_on = [ aws_lambda_function.chat ]
+# }
 
 # Lambda layer for chat
 resource "aws_lambda_layer_version" "openai_layer" {

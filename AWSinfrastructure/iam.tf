@@ -29,8 +29,8 @@ resource "aws_iam_policy" "lambda_email_policy" {
 }
 
 resource "aws_iam_role" "lambda_email_role" {
-  name          = "LambdaEmailRole"
-  provider      = aws.ses_provider
+  name     = "LambdaEmailRole"
+  provider = aws.ses_provider
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -76,9 +76,9 @@ resource "aws_iam_role" "chat_lambda_role" {
 
 # IAM policy to enable Lambda function to write logs
 resource "aws_iam_role_policy" "chat_lambda_logs_policy" {
-  name   = "chat_lambda_logs_policy"
+  name = "chat_lambda_logs_policy"
   # description = "Allow Lambda function to write logs to CloudWatch"
-  role   = aws_iam_role.chat_lambda_role.id
+  role = aws_iam_role.chat_lambda_role.id
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -90,6 +90,23 @@ resource "aws_iam_role_policy" "chat_lambda_logs_policy" {
         ]
         Effect   = "Allow"
         Resource = "*"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy" "secrets_manager_access" {
+  name = "secrets_manager_access"
+  role = aws_iam_role.chat_lambda_role.id
+  policy = jsonencode({
+    "Version" : "2012-10-17",
+    "Statement" : [
+      {
+        "Effect" : "Allow",
+        "Action" : [
+          "secretsmanager:GetSecretValue"
+        ],
+        "Resource" : "arn:aws:secretsmanager:eu-central-1:792277894863:secret:chatGPT_key-LUoLnu"
       }
     ]
   })

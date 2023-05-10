@@ -28,8 +28,12 @@ def get_secret():
 
     # Decrypts secret using the associated KMS key.
     secret = get_secret_value_response['SecretString']
-    print("secret received. returning secret")
-    return secret
+    # Parse the JSON string into a dictionary and extract the API key
+    secret_dict = json.loads(secret)
+    api_key = secret_dict["chatGPT_key"]
+    
+    print("API key received. Returning API key")
+    return api_key
 
 
 def message_chatgpt(message):
