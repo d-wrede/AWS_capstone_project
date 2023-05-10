@@ -8,6 +8,7 @@ AWSinfrastructure/terraform.tfstate
 AWSinfrastructure/terraform.tfstate.backup
 inactive_files/
 *.tf
+*.zip
 !AWSinfrastructure/*.tf
 terraform.tfstate
 gpt_request.py

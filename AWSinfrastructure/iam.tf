@@ -10,7 +10,9 @@ data "aws_iam_policy_document" "lambda_email_permissions" {
     actions   = ["logs:CreateLogStream", "logs:CreateLogGroup", "logs:PutLogEvents"]
     resources = ["*"]
   }
+}
 
+data "aws_iam_policy_document" "lambda_s3_permissions" {
   statement {
     sid     = "VisualEditor1"
     effect  = "Allow"
@@ -26,6 +28,12 @@ resource "aws_iam_policy" "lambda_email_policy" {
   name        = "LambdaEmailPolicy"
   description = "Policy to allow Lambda to access S3 and SES for sending emails."
   policy      = data.aws_iam_policy_document.lambda_email_permissions.json
+}
+
+resource "aws_iam_policy" "lambda_s3_policy" {
+  name        = "LambdaS3Policy"
+  description = "Policy to allow Lambda to access S3 for reading objects."
+  policy      = data.aws_iam_policy_document.lambda_s3_permissions.json
 }
 
 resource "aws_iam_role" "lambda_email_role" {
@@ -51,6 +59,39 @@ resource "aws_iam_role_policy_attachment" "lambda_email_policy_attachment" {
   role       = aws_iam_role.lambda_email_role.name
 }
 
+resource "aws_iam_role_policy_attachment" "lambda_s3_policy_attachment" {
+  policy_arn = aws_iam_policy.lambda_s3_policy.arn
+  role       = aws_iam_role.lambda_email_role.name
+}
+
+
+##########################################
+#  contact form Lambda mail permission   #
+##########################################
+
+
+resource "aws_iam_role" "lambda_contact_role" {
+  name     = "LambdaContactEmailRole"
+  provider = aws.ses_provider
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "lambda_contact_policy_attachment" {
+  policy_arn = aws_iam_policy.lambda_email_policy.arn
+  role       = aws_iam_role.lambda_contact_role.name
+}
 
 ############################################
 # chat Lambda Integration  #

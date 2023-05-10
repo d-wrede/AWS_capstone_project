@@ -93,6 +93,11 @@ variable "gw_resource_path_part" {
   default     = "message"
 }
 
+variable "gw_resource_contact_path_part" {
+  description = "The path part of the API Gateway resource"
+  default     = "contact_message"
+}
+
 ####################
 # Lambda variables #
 ####################

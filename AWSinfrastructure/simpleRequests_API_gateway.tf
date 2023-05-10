@@ -2,13 +2,7 @@
 # API GATEWAY - Sets up & configure api gw
 ############################################
 
-# URL to example roger welin:
-# https://rogerwelin.github.io/aws/serverless/terraform/lambda/2019/03/18/build-a-serverless-website-from-scratch-with-lambda-and-terraform.html
-# ids and method are by roger welin defined via "${}" syntax.
-
-# according to example roger welin
-# only regional endpoint configuration added
-resource "aws_api_gateway_rest_api" "chat_api" {
+resource "aws_api_gateway_rest_api" "portfo_gw" {
   name        = "ChatAPI"
   description = "API for chat application"
 
@@ -17,24 +11,25 @@ resource "aws_api_gateway_rest_api" "chat_api" {
   }
 }
 
-# according to example roger welin
+#######################
+#   chat messaging    #
+#######################
+
 resource "aws_api_gateway_resource" "message_resource" {
-  rest_api_id = aws_api_gateway_rest_api.chat_api.id
-  parent_id   = aws_api_gateway_rest_api.chat_api.root_resource_id
+  rest_api_id = aws_api_gateway_rest_api.portfo_gw.id
+  parent_id   = aws_api_gateway_rest_api.portfo_gw.root_resource_id
   path_part   = var.gw_resource_path_part
 }
 
-# not defined in example roger welin
 resource "aws_api_gateway_method" "post_message" {
-  rest_api_id   = aws_api_gateway_rest_api.chat_api.id
+  rest_api_id   = aws_api_gateway_rest_api.portfo_gw.id
   resource_id   = aws_api_gateway_resource.message_resource.id
   http_method   = "POST"
   authorization = "NONE"
 }
 
-# not defined in example roger welin
 resource "aws_api_gateway_integration" "post_message" {
-  rest_api_id = aws_api_gateway_rest_api.chat_api.id
+  rest_api_id = aws_api_gateway_rest_api.portfo_gw.id
   resource_id = aws_api_gateway_resource.message_resource.id
   http_method = aws_api_gateway_method.post_message.http_method
 
@@ -45,18 +40,13 @@ resource "aws_api_gateway_integration" "post_message" {
 
 
 resource "aws_api_gateway_deployment" "chat_api_deployment" {
-  rest_api_id = aws_api_gateway_rest_api.chat_api.id
+  rest_api_id = aws_api_gateway_rest_api.portfo_gw.id
   stage_name  = var.stage_name
-
-  # access_log_settings {
-  #   destination_arn = aws_cloudwatch_log_group.chat_log_group.arn
-  #   format          = "$context.identity.sourceIp $context.identity.caller $context.identity.user [$context.requestTime] \"$context.httpMethod $context.resourcePath $context.protocol\" $context.status $context.responseLength $context.requestId"
-  # }
 
   # redeploy when any of the following resources are changed
   triggers = {
     redeployment = sha1(jsonencode([
-      aws_api_gateway_rest_api.chat_api.id,
+      aws_api_gateway_rest_api.portfo_gw.id,
       aws_api_gateway_resource.message_resource.id,
       aws_api_gateway_method.post_message.id,
       aws_api_gateway_integration.post_message.id,
@@ -68,6 +58,54 @@ resource "aws_api_gateway_deployment" "chat_api_deployment" {
   # depends_on = [aws_cloudwatch_log_group.chat_log_group]
 }
 
+#############################
+#  contact form forwarding  #
+#############################
+
+resource "aws_api_gateway_resource" "contact_form_resource" {
+  rest_api_id = aws_api_gateway_rest_api.portfo_gw.id
+  parent_id   = aws_api_gateway_rest_api.portfo_gw.root_resource_id
+  path_part   = var.gw_resource_contact_path_part
+}
+
+resource "aws_api_gateway_method" "post_contact_message" {
+  rest_api_id   = aws_api_gateway_rest_api.portfo_gw.id
+  resource_id   = aws_api_gateway_resource.contact_form_resource.id
+  http_method   = "POST"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "post_contact_message" {
+  rest_api_id = aws_api_gateway_rest_api.portfo_gw.id
+  resource_id = aws_api_gateway_resource.contact_form_resource.id
+  http_method = aws_api_gateway_method.post_contact_message.http_method
+
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = "arn:aws:apigateway:${var.region}:lambda:path/2015-03-31/functions/${aws_lambda_function.contact_forwarder.arn}/invocations"
+}
+
+
+resource "aws_api_gateway_deployment" "contact_api_deployment" {
+  rest_api_id = aws_api_gateway_rest_api.portfo_gw.id
+  stage_name  = var.stage_name
+
+  # redeploy when any of the following resources are changed
+  triggers = {
+    redeployment = sha1(jsonencode([
+      aws_api_gateway_rest_api.portfo_gw.id,
+      aws_api_gateway_resource.contact_form_resource.id,
+      aws_api_gateway_method.post_contact_message.id,
+      aws_api_gateway_integration.post_contact_message.id,
+      #aws_api_gateway_method.options_message.id,
+      #aws_api_gateway_integration.options_message.id,
+    ]))
+  }
+
+  # depends_on = [aws_cloudwatch_log_group.chat_log_group]
+}
+
+
 ########
 # enable logging
 #######
@@ -75,7 +113,7 @@ resource "aws_api_gateway_account" "chat_api_gateway_account" {
   cloudwatch_role_arn = aws_iam_role.api_gateway_cloudwatch_logs.arn
 }
 # resource "aws_cloudwatch_log_group" "chat_log_group" {
-#   name              = "API-Gateway-Execution-Logs_${aws_api_gateway_rest_api.chat_api.id}/${var.stage_name}"
+#   name              = "API-Gateway-Execution-Logs_${aws_api_gateway_rest_api.portfo_gw.id}/${var.stage_name}"
 #   retention_in_days = 7
 # }
 
@@ -85,7 +123,7 @@ resource "aws_api_gateway_account" "chat_api_gateway_account" {
 
 # according to example roger welin
 # resource "aws_api_gateway_method" "options_message" {
-#   rest_api_id   = aws_api_gateway_rest_api.chat_api.id
+#   rest_api_id   = aws_api_gateway_rest_api.portfo_gw.id
 #   resource_id   = aws_api_gateway_resource.message_resource.id
 #   http_method   = "OPTIONS"
 #   authorization = "NONE"
@@ -93,7 +131,7 @@ resource "aws_api_gateway_account" "chat_api_gateway_account" {
 
 # comparable to example roger welin
 # resource "aws_api_gateway_integration" "options_message" {
-#   rest_api_id = aws_api_gateway_rest_api.chat_api.id
+#   rest_api_id = aws_api_gateway_rest_api.portfo_gw.id
 #   resource_id = aws_api_gateway_resource.message_resource.id
 #   http_method = aws_api_gateway_method.options_message.http_method
 
@@ -109,7 +147,7 @@ resource "aws_api_gateway_account" "chat_api_gateway_account" {
 
 # comparable to example roger welin
 # resource "aws_api_gateway_method_response" "options_200_response" {
-#   rest_api_id = aws_api_gateway_rest_api.chat_api.id
+#   rest_api_id = aws_api_gateway_rest_api.portfo_gw.id
 #   resource_id = aws_api_gateway_resource.message_resource.id
 #   http_method = aws_api_gateway_method.options_message.http_method
 #   status_code = "200"
@@ -129,7 +167,7 @@ resource "aws_api_gateway_account" "chat_api_gateway_account" {
 
 # comparable to example roger welin
 # resource "aws_api_gateway_integration_response" "options_200_response" {
-#   rest_api_id = aws_api_gateway_rest_api.chat_api.id
+#   rest_api_id = aws_api_gateway_rest_api.portfo_gw.id
 #   resource_id = aws_api_gateway_resource.message_resource.id
 #   http_method = aws_api_gateway_method.options_message.http_method
 #   status_code = aws_api_gateway_method_response.options_200_response.status_code
@@ -150,7 +188,7 @@ resource "aws_api_gateway_account" "chat_api_gateway_account" {
 
 # # not defined in example roger welin
 # resource "aws_api_gateway_method_response" "post_200_response" {
-#   rest_api_id = aws_api_gateway_rest_api.chat_api.id
+#   rest_api_id = aws_api_gateway_rest_api.portfo_gw.id
 #   resource_id = aws_api_gateway_resource.message_resource.id
 #   http_method = aws_api_gateway_method.post_message.http_method
 #   status_code = "200"
@@ -168,7 +206,7 @@ resource "aws_api_gateway_account" "chat_api_gateway_account" {
 
 # # not defined in example roger welin
 # resource "aws_api_gateway_integration_response" "post_200_response" {
-#   rest_api_id = aws_api_gateway_rest_api.chat_api.id
+#   rest_api_id = aws_api_gateway_rest_api.portfo_gw.id
 #   resource_id = aws_api_gateway_resource.message_resource.id
 #   http_method = aws_api_gateway_method.post_message.http_method
 #   status_code = aws_api_gateway_method_response.post_200_response.status_code
