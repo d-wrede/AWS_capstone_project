@@ -19,9 +19,7 @@ def get_secret():
     try:
         get_secret_value_response = client.get_secret_value(SecretId=secret_name)
     except ClientError as e:
-        print(
-            e
-        )  # will this have any effect in the lambda function? yes, it will. check your logs! ;-)
+        print(e)
         raise e
 
     # Decrypts secret using the associated KMS key.
@@ -40,7 +38,9 @@ def message_chatgpt(message, instructions, conversation_history):
     openai.api_key = get_secret()
     system_message = {"role": "system", "content": instructions}
 
-    conversation = [system_message] + conversation_history + [{"role": "user", "content": message}]
+    conversation = (
+        [system_message] + conversation_history + [{"role": "user", "content": message}]
+    )
     print("conversation: ", conversation)
     response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo", messages=conversation, temperature=0.7
@@ -48,8 +48,6 @@ def message_chatgpt(message, instructions, conversation_history):
     print("response received: ", response)
     print("response content: ", response.choices[0].message.content.strip())
     return response.choices[0].message.content.strip()
-
-
 
 
 def read_conversation_from_s3(bucket, key):
