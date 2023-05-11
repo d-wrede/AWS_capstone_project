@@ -90,12 +90,12 @@ variable "stage_name" {
 
 variable "gw_resource_path_part" {
   description = "The path part of the API Gateway resource"
-  default     = "message"
+  default     = "chat"
 }
 
 variable "gw_resource_contact_path_part" {
   description = "The path part of the API Gateway resource"
-  default     = "contact_message"
+  default     = "contact"
 }
 
 ####################

@@ -3,8 +3,8 @@
 ############################################
 
 resource "aws_api_gateway_rest_api" "portfo_gw" {
-  name        = "ChatAPI"
-  description = "API for chat application"
+  name        = "portfolio_gateway"
+  description = "API REST Gateway for portfolio page"
 
   endpoint_configuration {
     types = ["REGIONAL"]
@@ -54,8 +54,8 @@ resource "aws_api_gateway_deployment" "chat_api_deployment" {
       #aws_api_gateway_integration.options_message.id,
     ]))
   }
-
-  # depends_on = [aws_cloudwatch_log_group.chat_log_group]
+  # trying this depends_on
+  depends_on = [aws_api_gateway_integration.post_message]
 }
 
 #############################

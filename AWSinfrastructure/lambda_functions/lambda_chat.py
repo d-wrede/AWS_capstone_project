@@ -37,10 +37,9 @@ def message_chatgpt(message, instructions, conversation_history):
     print("conversation history: ", conversation_history)
     openai.api_key = get_secret()
     system_message = {"role": "system", "content": instructions}
-
-    conversation = (
-        [system_message] + conversation_history + [{"role": "user", "content": message}]
-    )
+    first_message = "Welcome! I'm your personal assistant, here to help you determine if the job candidate is the right fit for your open position. How can I support you in this evaluation process?"
+    initial_message = {"role": "assistant", "content": first_message}
+    conversation = [system_message] + [initial_message] + conversation_history + [{"role": "user", "content": message}]
     print("conversation: ", conversation)
     response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo", messages=conversation, temperature=0.7
