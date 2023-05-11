@@ -10,8 +10,11 @@ from urllib.parse import parse_qs
 def create_message(name, email, message_text):
     """Create email message to be sent"""
     
-    sender = os.environ["MailSender"]
-    recipient = os.environ["MailRecipient"]
+    # sender = os.environ["MailSender"]
+    # recipient = os.environ["MailRecipient"]
+
+    sender = "projects@daniel-wrede.de"
+    recipient = "daniel.wrede@posteo.de"
 
     subject = "Contact Form: Message from {} ({})".format(name, email)
 
@@ -32,7 +35,8 @@ def create_message(name, email, message_text):
 def send_email(message):
     """Send email using Amazon SES"""
 
-    aws_region = os.environ["Region"]
+    # aws_region = os.environ["Region"]
+    aws_region = "eu-central-1"
 
     # Create a new SES client.
     client_ses = boto3.client("ses", aws_region)

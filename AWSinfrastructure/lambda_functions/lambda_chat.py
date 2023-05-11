@@ -109,6 +109,7 @@ def lambda_handler(event, context):
     print("response: ", response)
 
     # Write conversation history to S3
+    conversation_history.append({"role": "user", "content": message_text.strip()})
     conversation_history.append({"role": "assistant", "content": response.strip()})
     write_conversation_to_s3(bucket, key, conversation_history)
 

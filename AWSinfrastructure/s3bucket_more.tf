@@ -52,7 +52,7 @@ resource "aws_s3_bucket" "email_bucket" {
   force_destroy = true
 }
 
-resource "aws_s3_bucket_policy" "SES_policy" {
+resource "aws_s3_bucket_policy" "s3_forward_policy" {
   bucket = aws_s3_bucket.email_bucket.id
   provider = aws.ses_provider
 
@@ -74,7 +74,7 @@ resource "aws_s3_bucket_policy" "SES_policy" {
       {
         Sid       = "AllowLambdaGetObject"
         Effect    = "Allow"
-        Principal = { "AWS" : aws_iam_role.lambda_email_role.arn }
+        Principal = { "AWS" : aws_iam_role.lambda_forward_role.arn }
         Action    = "s3:GetObject"
         Resource  = "${aws_s3_bucket.email_bucket.arn}/*"
       }
@@ -89,5 +89,5 @@ resource "aws_s3_bucket_policy" "SES_policy" {
 resource "aws_s3_bucket" "chat_bucket" {
   bucket        = var.chat_bucket_name
   tags          = var.common_tags
-  force_destroy = true
+  #force_destroy = true
 }

@@ -12,7 +12,7 @@ resource "aws_lambda_function" "chat" {
   filename = "lambda_functions/lambda_chat.zip"
   layers   = [aws_lambda_layer_version.openai_layer.arn]
 
-  timeout = 50
+  timeout = 30
 }
 
 # CloudWatch log group for the Lambda function

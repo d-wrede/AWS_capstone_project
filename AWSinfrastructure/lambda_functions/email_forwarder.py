@@ -96,7 +96,6 @@ def create_message(file_dict):
 
 
 def send_email(message):
-    aws_region = os.environ["Region"]
 
     # Create a new SES client.
     client_ses = boto3.client("ses", region)

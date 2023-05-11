@@ -12,7 +12,13 @@ resource "aws_lambda_function" "contact_forwarder" {
   # Replace the file path with the actual path to your Lambda function code
   filename = "lambda_functions/contact_forwarder.zip"
 
-  timeout = 30
+  environment {
+    variables = {
+      MailSender    = "projects@daniel-wrede.de"
+      MailRecipient = "daniel.wrede@posteo.de"
+      Region        = var.region
+    }
+  }
 }
 
 # CloudWatch log group for the Lambda function

@@ -3,7 +3,7 @@
 ##############################################
 
 
-data "aws_iam_policy_document" "lambda_email_permissions" {
+data "aws_iam_policy_document" "lambda_log_permissions" {
   statement {
     sid       = "VisualEditor0"
     effect    = "Allow"
@@ -24,10 +24,21 @@ data "aws_iam_policy_document" "lambda_s3_permissions" {
   }
 }
 
-resource "aws_iam_policy" "lambda_email_policy" {
-  name        = "LambdaEmailPolicy"
-  description = "Policy to allow Lambda to access S3 and SES for sending emails."
-  policy      = data.aws_iam_policy_document.lambda_email_permissions.json
+data "aws_iam_policy_document" "lambda_ses_permissions" {
+  statement {
+    sid     = "VisualEditor2"
+    effect  = "Allow"
+    actions = ["ses:SendRawEmail"]
+    resources = [
+      "arn:aws:ses:${var.region}:${data.aws_caller_identity.current.account_id}:identity/*"
+    ]
+  }
+}
+
+resource "aws_iam_policy" "lambda_log_policy" {
+  name        = "LambdaLogsPolicy"
+  description = "Policy to allow Lambda to create CloudWatch logs."
+  policy      = data.aws_iam_policy_document.lambda_log_permissions.json
 }
 
 resource "aws_iam_policy" "lambda_s3_policy" {
@@ -36,8 +47,14 @@ resource "aws_iam_policy" "lambda_s3_policy" {
   policy      = data.aws_iam_policy_document.lambda_s3_permissions.json
 }
 
-resource "aws_iam_role" "lambda_email_role" {
-  name     = "LambdaEmailRole"
+resource "aws_iam_policy" "lambda_ses_policy" {
+  name        = "LambdaSESPolicy"
+  description = "Policy to allow Lambda to access SES for sending emails."
+  policy      = data.aws_iam_policy_document.lambda_ses_permissions.json
+}
+
+resource "aws_iam_role" "lambda_forward_role" {
+  name     = "LambdaForwardRole"
   provider = aws.ses_provider
 
   assume_role_policy = jsonencode({
@@ -54,15 +71,21 @@ resource "aws_iam_role" "lambda_email_role" {
   })
 }
 
-resource "aws_iam_role_policy_attachment" "lambda_email_policy_attachment" {
-  policy_arn = aws_iam_policy.lambda_email_policy.arn
-  role       = aws_iam_role.lambda_email_role.name
+resource "aws_iam_role_policy_attachment" "lambda_forward_log_policy_attachment" {
+  policy_arn = aws_iam_policy.lambda_log_policy.arn
+  role       = aws_iam_role.lambda_forward_role.name
 }
 
-resource "aws_iam_role_policy_attachment" "lambda_s3_policy_attachment" {
+resource "aws_iam_role_policy_attachment" "lambda_forward_s3_policy_attachment" {
   policy_arn = aws_iam_policy.lambda_s3_policy.arn
-  role       = aws_iam_role.lambda_email_role.name
+  role       = aws_iam_role.lambda_forward_role.name
 }
+
+resource "aws_iam_role_policy_attachment" "lambda_forward_ses_policy_attachment" {
+  policy_arn = aws_iam_policy.lambda_ses_policy.arn
+  role       = aws_iam_role.lambda_forward_role.name
+}
+
 
 
 ##########################################
@@ -71,8 +94,8 @@ resource "aws_iam_role_policy_attachment" "lambda_s3_policy_attachment" {
 
 
 resource "aws_iam_role" "lambda_contact_role" {
-  name     = "LambdaContactEmailRole"
-  provider = aws.ses_provider
+  name     = "LambdaContactRole"
+  #provider = aws.ses_provider
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -88,8 +111,13 @@ resource "aws_iam_role" "lambda_contact_role" {
   })
 }
 
-resource "aws_iam_role_policy_attachment" "lambda_contact_policy_attachment" {
-  policy_arn = aws_iam_policy.lambda_email_policy.arn
+resource "aws_iam_role_policy_attachment" "lambda_contact_log_policy_attachment" {
+  policy_arn = aws_iam_policy.lambda_log_policy.arn
+  role       = aws_iam_role.lambda_contact_role.name
+}
+
+resource "aws_iam_role_policy_attachment" "lambda_contact_ses_policy_attachment" {
+  policy_arn = aws_iam_policy.lambda_ses_policy.arn
   role       = aws_iam_role.lambda_contact_role.name
 }
 
