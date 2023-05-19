@@ -40,19 +40,25 @@ Resources for this project are created and managed using Terraform.
 ### Steps
 
 1. **Clone the repository.**
-\```bash
+
+```bash
 git clone <https://github.com/d-wrede/AWS_capstone_project.git>
 cd AWS_capstone_project
-\```
+```
+
 2. **Initialize Terraform.**
-\```bash
+
+```bash
 terraform init
-\```
+```
+
 3. **Plan and apply the Terraform configuration.**
-\```bash
+
+```bash
 terraform plan
 terraform apply
-\```
+```
+
 After running `terraform apply`, confirm the creation of the resources.
 
 4. **Deploy the website contents.**
@@ -67,9 +73,10 @@ Once deployed, you can access the website via your domain. The contact form and 
 
 To avoid continued AWS charges, you can destroy the created resources with Terraform:
 
-\```bash
+```bash
 terraform destroy
-\```
+```
+
 Confirm the destruction when prompted.
 
 ## Contributing
