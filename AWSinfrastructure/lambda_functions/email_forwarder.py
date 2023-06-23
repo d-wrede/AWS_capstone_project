@@ -25,7 +25,7 @@ region = os.environ["Region"]
 def get_message_from_s3(message_id):
     incoming_email_bucket = os.environ["MailS3Bucket"]
     incoming_email_prefix = os.environ["MailS3Prefix"]
-    
+
     if incoming_email_prefix:
         object_path = incoming_email_prefix + "/" + message_id
     else:
@@ -52,8 +52,10 @@ def create_message(file_dict):
 
     separator = ";"
 
-    # Parse the email body.
-    mailobject = email.message_from_string(file_dict["file"].decode("utf-8"))
+    # # Parse the email body.
+    # mailobject = email.message_from_string(file_dict["file"].decode("utf-8"))
+    payload = file_dict["file"].decode("utf-8", errors="replace")
+    mailobject = email.message_from_string(payload)
 
     # Create a new subject line.
     subject_original = mailobject["Subject"]
@@ -73,8 +75,10 @@ def create_message(file_dict):
 
     # Create a MIME container.
     msg = MIMEMultipart()
+
     # Create a MIME text part.
     text_part = MIMEText(body_text, _subtype="html")
+
     # Attach the text part to the MIME message.
     msg.attach(text_part)
 
@@ -95,8 +99,58 @@ def create_message(file_dict):
     return message
 
 
-def send_email(message):
+def create_message2(file_dict):
+    sender = os.environ["MailSender"]
+    recipient = os.environ["MailRecipient"]
 
+    separator = ";"
+
+    # Parse the email body.
+    mailobject = email.message_from_string(file_dict["file"].decode("utf-8"))
+
+    # Create a new subject line.
+    subject_original = mailobject["Subject"]
+    subject = "FW: " + subject_original
+
+    # The body text of the email.
+    body_text = (
+        "The attached message was received from "
+        + separator.join(mailobject.get_all("From"))
+        + ". This message is archived at "
+        + file_dict["path"]
+    )
+
+    # Retrieve the payload of the email
+    if mailobject.is_multipart():
+        for part in mailobject.get_payload():
+            if part.get_content_type() == "text/plain":
+                payload = part.get_payload()
+    else:
+        payload = mailobject.get_payload()
+
+    # This is the new message body containing the sender, recipient, and payload
+    new_body_text = f"From: {separator.join(mailobject.get_all('From'))}\nTo: {recipient}\nMessage:\n{payload}"
+
+    # Create a MIME container.
+    msg = MIMEMultipart()
+
+    # Create a MIME text part.
+    text_part = MIMEText(new_body_text, _subtype="plain", _charset="utf-8")
+
+    # Attach the text part to the MIME message.
+    msg.attach(text_part)
+
+    # Add subject, from and to lines.
+    msg["Subject"] = subject
+    msg["From"] = sender
+    msg["To"] = recipient
+
+    message = {"Source": sender, "Destinations": recipient, "Data": msg.as_string()}
+
+    return message
+
+
+def send_email(message):
     # Create a new SES client.
     client_ses = boto3.client("ses", region)
 
