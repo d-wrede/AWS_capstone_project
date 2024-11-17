@@ -42,7 +42,7 @@ def message_chatgpt(message, instructions, conversation_history):
     conversation = [system_message] + [initial_message] + conversation_history + [{"role": "user", "content": message}]
     print("conversation: ", conversation)
     response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo", messages=conversation, temperature=0.7
+        model="gpt-4o-mini", messages=conversation, temperature=0.7
     )
     print("response received: ", response)
     print("response content: ", response.choices[0].message.content.strip())
